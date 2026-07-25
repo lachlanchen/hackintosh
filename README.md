@@ -47,6 +47,7 @@ to use its native Apple Kaby Lake graphics driver.
 | [Development host bootstrap](docs/10-development-host-bootstrap.md) | Package and project-tool setup |
 | [Remote access](docs/11-remote-access.md) | LAN SSH, Screen Sharing, and RDP boundaries |
 | [OptiPlex 3040 adaptation](docs/12-optiplex-3040-adaptation.md) | Hardware-first process for a second machine |
+| [Surface Book 2 Sequoia readiness](docs/13-surface-book-2-sequoia-readiness.md) | Sanitized audit, unattended-boot finding, and safe upgrade boundary |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary

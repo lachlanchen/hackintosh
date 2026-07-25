@@ -3,6 +3,11 @@
 Checked 2026-07-25.
 
 - [OpenCore Desktop Skylake guide](https://dortania.github.io/OpenCore-Install-Guide/config.plist/skylake.html)
+- [OpenCore Laptop Kaby Lake guide](https://dortania.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html)
+- [OpenCore releases](https://github.com/acidanthera/OpenCorePkg/releases)
+- [BigSurface repository and Surface device support](https://github.com/Xiashangning/BigSurface)
+- [Apple security releases](https://support.apple.com/100100)
+- [macOS Sequoia 15.7.7 security content](https://support.apple.com/127116)
 - [Dortania Ventura hardware notes](https://dortania.github.io/OpenCore-Install-Guide/extras/ventura.html)
 - [WhateverGreen Intel graphics FAQ](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)
 - [WhateverGreen repository and boot arguments](https://github.com/acidanthera/WhateverGreen)
@@ -15,4 +20,3 @@ Checked 2026-07-25.
 - [Apple Xcode support matrix](https://developer.apple.com/support/xcode)
 - [Xcode and Apple SDKs Agreement](https://www.apple.com/legal/sla/docs/xcode.pdf)
 - [XNU `packA`/`unpackA` source](https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/debug.c)
-
