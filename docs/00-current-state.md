@@ -35,6 +35,21 @@ Status date: 2026-07-25
   submodule commits.
 - XcodeGen 2.46.0 and CocoaPods 1.17.0 successfully generate the LightMind iOS
   workspace and resolve its local Rokid SDK pod.
+- Universal Xcode 26.3 (`17C529`) is installed at
+  `/Applications/Xcode-26.3.0.app`, selected with `xcode-select`, licensed, and
+  through first-launch setup.
+- The downloaded Xcode archive was verified as Apple-signed before expansion.
+  Its SHA-256 was
+  `cf87232e0419785170edcfa070b750f28808ec00b489ab540c08b7d197c79ae4`;
+  the archive was deleted after installation.
+- Universal iOS 26.3.1 simulator runtime `23D8133` is installed and boots on
+  this Intel host.
+- The LightMind CocoaPods workspace builds unsigned and signed with Xcode 26.3.
+- Five unit tests and one portrait/landscape UI test pass.
+- A version `0.2.3` build `5` archive and App Store export completed with a
+  production-style signature. This verifies the temporary development
+  workstation path; final release evidence still belongs on Apple-supported
+  hardware.
 
 ## Boot-Critical Graphics Values
 
@@ -81,8 +96,7 @@ development host.
 
 ## Pending
 
-- Install and select universal Xcode 26.3.
-- Install one compatible iOS Simulator runtime if required by the project.
-- Compile, test, sign, and archive the generated LightMind iOS workspace.
+- Repeat final archive and physical-device evidence on Apple-supported
+  hardware.
 - Optionally add a Broadcom BCM94360CD PCIe card for AirDrop, accepting that
   Sequoia requires a separately maintained legacy wireless patch.

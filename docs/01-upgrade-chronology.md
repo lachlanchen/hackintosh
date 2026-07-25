@@ -150,3 +150,33 @@ Sequoia desktop. Times and machine identifiers are intentionally omitted.
 5. Reused Ubuntu's existing live-desktop RDP bridge and created a
    prompt-for-credentials Windows App connection file on the Mac.
 6. Added a Remmina profile on Ubuntu that never stores the Mac password.
+
+## 15. Install the Sequoia-Bounded Xcode Toolchain
+
+1. Confirmed the App Store Xcode build required a newer macOS release and did
+   not change the Sequoia boundary to satisfy that listing.
+2. Authenticated to Apple's Developer downloads service in the dedicated
+   publication browser profile.
+3. Downloaded final universal Xcode 26.3, rejecting the release-candidate
+   archive.
+4. Verified the archive as Apple-signed and recorded its SHA-256.
+5. Installed Xcode 26.3 (`17C529`) with `xcodes`, selected it, accepted the
+   license, and completed first-launch setup.
+6. Removed the multi-gigabyte source archive after successful verification and
+   installation.
+7. Started the official universal iOS platform/runtime download required for
+   simulator and generic-device destination resolution on this Intel host.
+
+## 16. Validate the iOS Development Path
+
+1. Installed the universal iOS 26.3.1 simulator runtime and confirmed it was
+   available to CoreSimulator on the Intel host.
+2. Regenerated the LightMind Xcode project and CocoaPods workspace.
+3. Completed unsigned and automatically signed generic-device builds.
+4. Ran five unit tests and one portrait/landscape UI test without failures.
+5. Created and reviewed a signed version `0.2.3` build `5` archive.
+6. Exported an App Store/TestFlight IPA and verified its signature and
+   production entitlements.
+7. Kept the archive, IPA, account state, signing assets, and upload logs outside
+   this repository.
+8. Retained Apple-supported hardware as the final release-validation boundary.

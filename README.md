@@ -23,6 +23,7 @@ the working Monterey recovery system.
 | Acceleration | 1536 MB dynamic VRAM, Apple Kaby Lake driver, Metal 3 |
 | Storage | Monterey and Sequoia share one APFS container dynamically |
 | Network | Intel Ethernet verified; AirDrop unavailable without AWDL Wi-Fi |
+| iOS toolchain | Xcode 26.3, iOS 26.3.1 runtime, signed archive/export verified |
 | Updates | Manual installation only; Tahoe is outside the validated boundary |
 
 The decisive fix was to avoid OCLP graphics root patching on the Hackintosh.
@@ -45,6 +46,7 @@ to use its native Apple Kaby Lake graphics driver.
 | [Panic decoding](docs/09-panic-decoding.md) | Decode packed `aapl,panic-info` |
 | [Development host bootstrap](docs/10-development-host-bootstrap.md) | Package and project-tool setup |
 | [Remote access](docs/11-remote-access.md) | LAN SSH, Screen Sharing, and RDP boundaries |
+| [OptiPlex 3040 adaptation](docs/12-optiplex-3040-adaptation.md) | Hardware-first process for a second machine |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary
