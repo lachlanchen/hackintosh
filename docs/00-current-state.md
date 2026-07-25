@@ -1,6 +1,6 @@
 # Current State
 
-Status date: 2026-07-25
+Status date: 2026-07-26
 
 ## Verified
 
@@ -50,6 +50,12 @@ Status date: 2026-07-25
   production-style signature. This verifies the temporary development
   workstation path; final release evidence still belongs on Apple-supported
   hardware.
+- The development shell selects Python 3.12.13 and OpenJDK 21.0.12. GitHub CLI
+  2.96.0, tmux 3.7b, ADB/platform-tools 37.0.0, `scrcpy` 4.1, and Android
+  platform/build tools for API 35 are installed.
+- The GlassAgent backend's 167 tests, PWA's 45 checks, and Toolchains' 27 tests
+  pass on this host. The Android phone plus glasses-display modules also pass
+  `testDebugUnitTest assembleDebug`.
 
 ## Boot-Critical Graphics Values
 
