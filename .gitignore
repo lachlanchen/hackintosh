@@ -1,0 +1,43 @@
+.DS_Store
+._*
+.Spotlight-V100/
+.Trashes/
+
+# Never commit machine identity or boot media.
+EFI/
+EFI-*/
+*.efi
+*.aml
+config.plist
+*.rom
+*.fd
+*.dmp
+*.panic
+*.ips
+*.tracev3
+*.log
+
+# Installers, packages, archives, and generated evidence.
+*.app/
+*.dmg
+*.pkg
+*.xip
+*.zip
+*.tar*
+artifacts/
+private/
+evidence/
+tmp/
+
+# Credentials and local state.
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.mobileprovision
+*.cookies
+*token*
+*credential*
+*password*
+
