@@ -43,6 +43,8 @@ to use its native Apple Kaby Lake graphics driver.
 | [Wireless and AirDrop](docs/07-wireless-and-airdrop.md) | Current limitation and hardware options |
 | [Update policy](docs/08-update-policy.md) | Safe maintenance checkpoints |
 | [Panic decoding](docs/09-panic-decoding.md) | Decode packed `aapl,panic-info` |
+| [Development host bootstrap](docs/10-development-host-bootstrap.md) | Package and project-tool setup |
+| [Remote access](docs/11-remote-access.md) | LAN SSH, Screen Sharing, and RDP boundaries |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary
@@ -65,4 +67,3 @@ artifacts remain in encrypted or ignored local storage.
 | [Sponsor Lachlan Chen](https://github.com/sponsors/lachlanchen) | [LazyingArt support](https://chat.lazying.art/donate) | [PayPal](https://paypal.me/RongzhouChen) | [Stripe](https://buy.stripe.com/aFadR8gIaflgfQV6T4fw400) |
 
 Build less. Recover deliberately.
-

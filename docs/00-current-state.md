@@ -26,6 +26,15 @@ Status date: 2026-07-25
 - The current user's screensaver idle timer is disabled. Remote
   `caffeinate -u -t 10` successfully restored a display that had not responded
   to local mouse movement.
+- Key-based SSH works in both directions between the Sequoia host and its
+  Ubuntu development peer.
+- macOS Screen Sharing is reachable on the trusted LAN. Ubuntu's existing
+  live-desktop RDP bridge is reachable from the Mac through Windows App.
+- Chrome uses a dedicated publication profile with CDP bound to loopback only.
+- The GlassAgent root checkout is clean at its pinned root and top-level
+  submodule commits.
+- XcodeGen 2.46.0 and CocoaPods 1.17.0 successfully generate the LightMind iOS
+  workspace and resolve its local Rokid SDK pod.
 
 ## Boot-Critical Graphics Values
 
@@ -74,6 +83,6 @@ development host.
 
 - Install and select universal Xcode 26.3.
 - Install one compatible iOS Simulator runtime if required by the project.
-- Clone GlassAgent and validate the iOS workspace.
+- Compile, test, sign, and archive the generated LightMind iOS workspace.
 - Optionally add a Broadcom BCM94360CD PCIe card for AirDrop, accepting that
   Sequoia requires a separately maintained legacy wireless patch.

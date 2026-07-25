@@ -122,3 +122,31 @@ Sequoia desktop. Times and machine identifiers are intentionally omitted.
 3. Verified the effective AC policy after the change.
 4. Recovered an already-black display by asserting remote user activity with
    `caffeinate -u -t 10`.
+
+## 13. Bootstrap the Development Host
+
+1. Installed Command Line Tools 16.4 and verified Apple clang 17.0.0 and Apple
+   Git 2.39.5.
+2. Installed and verified the universal `xcodes` 2.0.3 utility.
+3. Installed a notarized Chrome build with a dedicated loopback-only CDP
+   profile for account-bound publication work.
+4. Installed Homebrew 6.0.12 in the Intel `/usr/local` prefix and disabled its
+   analytics.
+5. Installed XcodeGen 2.46.0 and CocoaPods 1.17.0.
+6. Installed Microsoft Windows App 11.3.7 from Microsoft's notarized package.
+7. Cloned GlassAgent and reconciled every top-level submodule to its recorded
+   gitlink. A separately authorized submodule was transferred from an already
+   verified clean checkout over the LAN rather than copying account tokens.
+8. Generated the LightMind Xcode project and CocoaPods workspace. Corrected its
+   custom configuration files to include the generated Pods settings.
+
+## 14. Establish Bidirectional Administration
+
+1. Verified Ubuntu-to-Mac key-based SSH.
+2. Added a dedicated Mac-to-Ubuntu SSH key and host alias.
+3. Added a dedicated Mac GitHub key to the owning account and verified the
+   returned GitHub identity before cloning.
+4. Verified macOS Screen Sharing on its standard LAN port.
+5. Reused Ubuntu's existing live-desktop RDP bridge and created a
+   prompt-for-credentials Windows App connection file on the Mac.
+6. Added a Remmina profile on Ubuntu that never stores the Mac password.
