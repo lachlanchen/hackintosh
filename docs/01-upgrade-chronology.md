@@ -114,3 +114,11 @@ Sequoia desktop. Times and machine identifiers are intentionally omitted.
 4. Reconfirmed the system volume remained sealed and accelerated.
 5. Set Sequoia as the persistent startup volume while preserving Monterey.
 
+## 12. Stabilize Unattended Development
+
+1. Disabled system, display, and disk sleep plus standby, automatic power-off,
+   and Power Nap with `pmset`.
+2. Disabled the current user's screensaver idle timer.
+3. Verified the effective AC policy after the change.
+4. Recovered an already-black display by asserting remote user activity with
+   `caffeinate -u -t 10`.

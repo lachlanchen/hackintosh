@@ -21,6 +21,11 @@ Status date: 2026-07-25
   checkpoint, 156.0 GB was unallocated inside the container.
 - Windows remains on a separate GPT partition and retains its firmware boot
   manager.
+- System sleep, display sleep, disk sleep, standby, and automatic power-off are
+  disabled for this development workstation.
+- The current user's screensaver idle timer is disabled. Remote
+  `caffeinate -u -t 10` successfully restored a display that had not responded
+  to local mouse movement.
 
 ## Boot-Critical Graphics Values
 
@@ -46,6 +51,25 @@ it enforces Kaby Lake graphics drivers when the shared EFI boots older macOS.
 - FileVault
 - AirDrop, because no AWDL-capable Wi-Fi interface is present
 
+## Development Power Policy
+
+The verified effective values are:
+
+```text
+sleep        0
+displaysleep 0
+disksleep    0
+standby      0
+autopoweroff 0
+powernap     0
+```
+
+The current-host screensaver `idleTime` is also `0`. This prevents unattended
+build, download, and remote-debug sessions from being interrupted, but it also
+means the workstation and display do not conserve power automatically. Revisit
+this policy when the machine no longer needs to behave as an always-available
+development host.
+
 ## Pending
 
 - Install and select universal Xcode 26.3.
@@ -53,4 +77,3 @@ it enforces Kaby Lake graphics drivers when the shared EFI boots older macOS.
 - Clone GlassAgent and validate the iOS workspace.
 - Optionally add a Broadcom BCM94360CD PCIe card for AirDrop, accepting that
   Sequoia requires a separately maintained legacy wireless patch.
-

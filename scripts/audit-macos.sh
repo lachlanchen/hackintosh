@@ -44,3 +44,10 @@ xcode-select -p 2>/dev/null || true
 xcodebuild -version 2>/dev/null || true
 clang --version 2>/dev/null | head -n 2 || true
 git --version 2>/dev/null || true
+
+echo
+echo "== Power policy =="
+pmset -g custom
+printf "Current-host screensaver idleTime: "
+defaults -currentHost read com.apple.screensaver idleTime 2>/dev/null ||
+  echo "not set"
