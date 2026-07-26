@@ -1,9 +1,9 @@
 # OptiPlex 3040 Adaptation
 
-Status date: 2026-07-25
+Status date: 2026-07-26
 
-Status: proposed and deliberately hardware-gated. No OptiPlex 3040 has been
-audited or changed under this runbook.
+Status: partial hardware and boot audit completed. The existing Ubuntu and
+Windows 7 layout is recorded below; no Hackintosh candidate has been built.
 
 ## Boundary
 
@@ -14,6 +14,51 @@ firmware settings, or SMBIOS data.
 
 Never copy the 7050's PlatformInfo values. Every machine needs unique
 Apple-format identifiers generated locally and kept outside Git.
+
+## Existing-OS Boot Boundary
+
+The audited 3040 has a mixed firmware layout:
+
+- Ubuntu starts in UEFI mode from an EFI System Partition on the SSD.
+- Windows 7 is on a separate MBR hard disk with an active NTFS system
+  partition, Windows 7 MBR code, an NTFS `BOOTMGR` partition boot record,
+  `bootmgr`, BCD stores, and both BIOS and EFI Windows loader files.
+- Dell firmware exposes the Windows disk as a legacy BBS hard-disk entry.
+- Secure Boot is disabled.
+
+The former custom GRUB entry attempted to load
+`\EFI\Microsoft\Boot\bootmgfw.efi`. That is not the reliable boot path for this
+MBR Windows installation. An EFI GRUB process also cannot directly transfer
+control to an MBR BIOS boot sector because firmware cannot switch execution
+modes in place.
+
+The private repair therefore leaves every Windows sector and file unchanged.
+It installs a small local EFI application on Ubuntu's ESP. When selected from
+GRUB, the application writes the one-time UEFI `BootNext` variable for the
+exact Dell legacy hard-disk entry and requests a cold restart. Firmware then
+starts the existing Windows 7 MBR path.
+
+The installer verifies the physical model, exact disk identity, NTFS system
+partition, Dell BBS description, UEFI mode, and disabled Secure Boot. Before
+changing GRUB or the ESP, it preserves:
+
+- the Windows disk MBR;
+- the Windows partition boot record;
+- the complete pre-change EFI tree;
+- the prior custom GRUB file;
+- the firmware boot-entry listing;
+- a SHA-256 manifest.
+
+On 2026-07-26 the helper compiled as an x86-64 EFI application, GRUB accepted
+the generated configuration, and Dell firmware accepted the one-time legacy
+`BootNext` request. The 3040 did not return on its Linux network address after
+restart. Because the Windows 7 installation does not have a verified driver
+for the Linux USB Wi-Fi adapter, physical display confirmation remains
+required before marking the Windows boot complete.
+
+If firmware renumbers the legacy entry, regenerate the helper from Ubuntu
+after rediscovering the exact BBS entry. Never hard-code a boot number copied
+from another machine.
 
 ## Stage 0: Recovery First
 

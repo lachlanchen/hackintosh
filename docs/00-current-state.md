@@ -102,6 +102,10 @@ development host.
 
 ## Pending
 
+- A private, checksum-pinned OptiPlex 7050 BIOS update and recovery kit is
+  prepared. The physical service tag and installed BIOS version remain
+  intentionally unclaimed until Windows reads them from WMI at the next local
+  boot. No firmware update has been launched.
 - Repeat final archive and physical-device evidence on Apple-supported
   hardware.
 - Optionally add a Broadcom BCM94360CD PCIe card for AirDrop, accepting that
