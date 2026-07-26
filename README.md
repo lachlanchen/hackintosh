@@ -48,6 +48,8 @@ to use its native Apple Kaby Lake graphics driver.
 | [Remote access](docs/11-remote-access.md) | LAN SSH, Screen Sharing, and RDP boundaries |
 | [OptiPlex 3040 adaptation](docs/12-optiplex-3040-adaptation.md) | Hardware-first process for a second machine |
 | [Surface Book 2 Sequoia readiness](docs/13-surface-book-2-sequoia-readiness.md) | Sanitized audit, unattended-boot finding, and safe upgrade boundary |
+| [Surface Book 2 upgrade runbook](docs/14-surface-book-2-upgrade-runbook.md) | Recovery-first boot routing, APFS layout, input patch, tools, and validation |
+| [Surface Book 2 Sequoia result](docs/15-surface-book-2-sequoia-upgrade-result.md) | Completed in-place upgrade, installer behavior, and post-reboot validation |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary
@@ -60,8 +62,9 @@ This repository intentionally excludes:
 - credentials, cookies, signing certificates, and Apple account state
 - raw panic, diagnostic, and unified-log data
 
-Read-only diagnostics live in [`scripts/`](scripts/). Machine-specific recovery
-artifacts remain in encrypted or ignored local storage.
+Read-only diagnostics and identity-free, hash-gated recovery transactions live
+in [`scripts/`](scripts/README.md). Machine-specific recovery artifacts remain
+in encrypted or ignored local storage.
 
 ## Support
 
