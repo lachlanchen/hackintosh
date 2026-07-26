@@ -13,6 +13,7 @@ an operating system.
 | `stage-opencore-config.ps1` | Windows | Promote a candidate through the Windows system EFI |
 | `restore-opencore-config.ps1` | Windows | Restore a known-good config through the Windows system EFI |
 | `verify-macos-installer.sh` | macOS | Verify a full installer without launching it |
+| `surface-book-2-storage-reclaim.sh` | macOS | Audit, plan, or explicitly reclaim the verified Surface Book 2 Ubuntu layout |
 
 The macOS scripts require an explicit EFI device. Example shape:
 
@@ -88,6 +89,27 @@ Some Apple InstallAssistant wrappers use obsolete custom resource-envelope
 rules and fail whole-app strict verification. The script reports that result
 but still requires the independent disk-image, metadata, and critical-binary
 checks. It never re-signs or modifies Apple's installer.
+
+## Surface Book 2 storage reclaim
+
+The Surface Book 2 helper is read-only in its normal modes:
+
+```bash
+sudo ./scripts/surface-book-2-storage-reclaim.sh audit disk0
+sudo ./scripts/surface-book-2-storage-reclaim.sh plan disk0
+```
+
+It is intentionally locked to the exact verified geometry and signatures
+documented in
+[`docs/16-surface-book-2-storage-and-picker.md`](../docs/16-surface-book-2-storage-and-picker.md).
+It detects that the misleadingly APFS-typed 98.7 GB partition and the later
+131.4 GB Linux partition are both members of `vg-ubuntu`.
+
+Its explicit `apply` mode permanently destroys Ubuntu. Before doing so, it
+requires AC power, the current Sequoia APFS store, unchanged EFI and Windows
+identities, a new absolute metadata-backup directory, and two matching
+confirmations. It can add only the adjacent 98.7 GB to macOS; space behind
+Windows remains free for a later separate decision.
 
 ## Validation
 

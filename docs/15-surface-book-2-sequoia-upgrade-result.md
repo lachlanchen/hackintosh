@@ -180,8 +180,9 @@ launchctl bootout "gui/$uid" \
 - Windows fallback was fully boot-tested before the upgrade and its partition
   remains intact; it was not re-entered after Sequoia because the changed
   boundary was macOS/OpenCore routing, not Windows.
-- The two old OpenCore schema warnings and picker cosmetics remain separate
-  maintenance tasks.
+- The two old OpenCore schema warnings remain separate maintenance tasks.
+- Picker cosmetics were handled afterward with the reversible policy in
+  [Surface Book 2 storage and picker](16-surface-book-2-storage-and-picker.md).
 
 ## Practical lessons
 
