@@ -8,8 +8,10 @@ picker cleanup. No partition was removed or resized during this work.
 ## Current capacity
 
 The in-place Sequoia installation uses one 1.6 TB APFS container. At the
-audited checkpoint it had approximately 142 GB free inside the container,
-which is immediately usable by macOS.
+latest audited checkpoint it had approximately 137 GB free inside the
+container, which is immediately usable by macOS. The small change from an
+earlier 142 GB checkpoint reflects ordinary application and user-data growth,
+not a new partition.
 
 There is no separate old Sonoma System/Data volume group to delete. The normal
 upgrade replaced Sonoma's sealed System volume while preserving the same user
@@ -49,6 +51,42 @@ If Ubuntu is no longer needed:
 The trailing space should initially remain free. A later, separate decision
 can make it an APFS or ExFAT data volume, or handle it from Windows. The
 reclaim helper deliberately does not guess that policy.
+
+### If Windows is kept
+
+Windows currently occupies approximately 120 GB of its 209 GB partition, so
+it already has about 89 GB free. Removing Ubuntu can therefore be handled
+without resizing Windows:
+
+- add the adjacent 98.7 GB to macOS;
+- leave the approximately 132.5 GB behind Windows unallocated until there is
+  a clear use for it; or
+- extend Windows into that trailing space as a separate Windows-side action.
+
+Windows Disk Management can extend a volume only into unallocated space
+immediately to its right. Its shrink operation also creates space on the
+right side of the volume. Consequently, extending Windows into the tail and
+then shrinking it cannot move Windows to the right or create macOS-usable
+space before Windows.
+
+Moving Windows would require a verified image/restore or a separate,
+high-risk partition-moving procedure. It is intentionally outside the helper.
+
+### If Windows and Ubuntu are both removed
+
+After independent backups, deleting partitions 4 through 7 would leave the
+main APFS physical store followed by approximately 440 GB of contiguous free
+space. APFS could then grow through the entire former Ubuntu, Windows, and
+Ubuntu-tail region. Together with the current free capacity, macOS would have
+roughly 577 GB free before later data growth.
+
+The shared EFI partition must remain. The tiny Microsoft Reserved partition
+is before APFS, so deleting it would not help APFS grow and is not worth
+disturbing. No current script automates Windows removal.
+
+This partition-level option is much more disruptive than reclaiming ordinary
+files. The ranked file cleanup and external-storage plan is documented in
+[the space audit](17-surface-book-2-space-audit.md).
 
 ## Clean OpenCore picker
 

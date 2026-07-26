@@ -51,6 +51,7 @@ to use its native Apple Kaby Lake graphics driver.
 | [Surface Book 2 upgrade runbook](docs/14-surface-book-2-upgrade-runbook.md) | Recovery-first boot routing, APFS layout, input patch, tools, and validation |
 | [Surface Book 2 Sequoia result](docs/15-surface-book-2-sequoia-upgrade-result.md) | Completed in-place upgrade, installer behavior, and post-reboot validation |
 | [Surface Book 2 storage and picker](docs/16-surface-book-2-storage-and-picker.md) | Verified Ubuntu LVM topology, clean picker policy, and guarded future reclaim |
+| [Surface Book 2 space audit](docs/17-surface-book-2-space-audit.md) | Ranked, non-destructive cleanup and external-storage plan |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary
