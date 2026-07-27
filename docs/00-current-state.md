@@ -1,6 +1,6 @@
 # Current State
 
-Status date: 2026-07-26
+Status date: 2026-07-27
 
 ## Verified
 
@@ -110,3 +110,27 @@ development host.
   hardware.
 - Optionally add a Broadcom BCM94360CD PCIe card for AirDrop, accepting that
   Sequoia requires a separately maintained legacy wireless patch.
+
+## OptiPlex 3040 Candidate
+
+The separate OptiPlex 3040 is staged but has not booted macOS yet. Do not merge
+these candidate facts into the verified OptiPlex 7050 state above.
+
+- Windows 10 Pro 22H2 remains the default and is reachable through key-only
+  SSH.
+- Both GPTs and the Windows BCD have private pre-change backups.
+- A 4 GiB FAT32 `MACRECOVERY` ESP was created at the end of the 1 TB data disk
+  by shrinking only the end of `G:`. Its complete 27-file payload was
+  hash-verified after copy.
+- The Samsung SSD's 136.7 GiB unallocated extent remains untouched and is the
+  intended macOS target.
+- The Monterey recovery `BaseSystem.dmg` passed Apple's chunklist verification.
+- The private OpenCore 1.0.7 candidate passes its matching `ocvalidate` with no
+  issues.
+- A Windows BCD `BOOTAPP` entry points to the recovery OpenCore bootstrap.
+  Windows remains the default and no one-time boot is currently armed.
+- The first test still requires a physical display and USB keyboard. Graphics,
+  USB, Ethernet, audio, Recovery, installation, and reboot behavior remain
+  unverified on this board.
+- Setup Assistant must create the `lachlan` account before the prepared
+  bootstrap can install its dedicated public key and enable persistent SSH.

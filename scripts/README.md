@@ -14,6 +14,10 @@ an operating system.
 | `restore-opencore-config.ps1` | Windows | Restore a known-good config through the Windows system EFI |
 | `verify-macos-installer.sh` | macOS | Verify a full installer without launching it |
 | `surface-book-2-storage-reclaim.sh` | macOS | Audit, plan, or explicitly reclaim the verified Surface Book 2 Ubuntu layout |
+| `build-optiplex-3040-efi.py` | Linux | Reproducibly build a private 3040 EFI and validate it with matching OpenCore |
+| `stage-optiplex-3040-recovery.ps1` | Windows | Audit or stage the exact 3040 internal recovery partition and payload |
+| `boot-optiplex-3040-opencore.ps1` | Windows | Create, audit, arm, or clear the 3040's separate one-time OpenCore BCD path |
+| `bootstrap-optiplex-3040-macos.sh` | macOS | Enable key-only SSH and never-sleep behavior after Setup Assistant |
 
 The macOS scripts require an explicit EFI device. Example shape:
 
@@ -110,6 +114,70 @@ requires AC power, the current Sequoia APFS store, unchanged EFI and Windows
 identities, a new absolute metadata-backup directory, and two matching
 confirmations. It can add only the adjacent 98.7 GB to macOS; space behind
 Windows remains free for a later separate decision.
+
+## OptiPlex 3040 recovery staging
+
+Read
+[`docs/12-optiplex-3040-adaptation.md`](../docs/12-optiplex-3040-adaptation.md)
+before using these machine-locked helpers. They are intentionally not generic
+partitioning tools.
+
+`build-optiplex-3040-efi.py` requires an extracted OpenCore release and exactly
+the seven named kext sources. It generates the Apple-format identity only when
+the private identity file is absent, reuses that identity on every later
+build, emits a SHA-256 manifest named after the output directory, and refuses
+any `ocvalidate` issue. Run `--help` for the complete arguments.
+
+Copy the private EFI, Apple recovery folder, and macOS bootstrap into one
+private Windows payload directory. Audit before apply:
+
+```powershell
+.\stage-optiplex-3040-recovery.ps1 `
+  -Mode Audit `
+  -PayloadPath C:\Private\3040\payload `
+  -BackupDirectory C:\Private\3040\backups
+```
+
+Apply mode is locked to the audited Dell model, two disk models, `G:` offset,
+and either the exact pre-stage or resumable intermediate geometry. It saves
+GPT and BCD evidence before writing. It can only shrink the end of `G:` by
+4 GiB, create the expected ESP, and hash-verify the copied tree. It does not
+alter boot order or reboot:
+
+```powershell
+.\stage-optiplex-3040-recovery.ps1 `
+  -Mode Apply `
+  -PayloadPath C:\Private\3040\payload `
+  -BackupDirectory C:\Private\3040\backups
+```
+
+Create and inspect the BCD entry separately. `Create` does not arm or reboot:
+
+```powershell
+.\boot-optiplex-3040-opencore.ps1 `
+  -Mode Create `
+  -StateDirectory C:\Private\3040\state
+
+.\boot-optiplex-3040-opencore.ps1 `
+  -Mode Audit `
+  -StateDirectory C:\Private\3040\state
+```
+
+Only with a physical display and keyboard ready, use `-Mode Arm`, independently
+inspect `{bootmgr}`, and then restart. `Arm` selects OpenCore once; it does not
+request the restart. `Clear` removes only that pending one-time sequence.
+
+After Setup Assistant creates `lachlan`, run the staged macOS bootstrap and
+enter the administrator password once:
+
+```bash
+./bootstrap-optiplex-3040-macos.sh ./authorized_key.pub
+```
+
+The bootstrap refuses another OS or user, installs only the supplied Ed25519
+public key, enables Remote Login, sets the 3040 hostname, disables sleep, and
+prints its final SSH and power state. It does not create an account or store a
+password.
 
 ## Validation
 
