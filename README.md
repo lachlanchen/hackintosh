@@ -53,6 +53,7 @@ to use its native Apple Kaby Lake graphics driver.
 | [Surface Book 2 storage and picker](docs/16-surface-book-2-storage-and-picker.md) | Verified Ubuntu LVM topology, clean picker policy, and guarded future reclaim |
 | [Surface Book 2 space audit](docs/17-surface-book-2-space-audit.md) | Ranked, non-destructive cleanup and external-storage plan |
 | [Dell BIOS updates](docs/18-dell-bios-update.md) | Guarded firmware inventory, update, and recovery workflow |
+| [OptiPlex 3040 Monterey freeze handoff](docs/20-optiplex-3040-monterey-freeze-handoff.md) | Framebuffer evidence, failed handoff recovery, reversible picker cleanup, and CLI fallback |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary
