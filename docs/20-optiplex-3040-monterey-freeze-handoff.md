@@ -150,15 +150,19 @@ has been isolated independently from the graphics change.
 - Choose `Monterey` for normal macOS and `Windows 10` for Windows. Do not use a
   generic `Windows` entry until its firmware source is audited.
 
-The temporary firmware object may remain in display order after its one-time
-sequence is consumed. Windows and Monterey remain ahead of it, but remove it
-after evidence collection so a failed experiment does not remain in the
-long-term firmware menu.
+The Windows cleanup ran during the planned maintenance boot on 2026-07-30.
+`Audit` matched the reviewed candidate ESP, marker, OpenCore hash,
+description, path, and temporary firmware object before `Cleanup` was
+confirmed. The helper exported the live BCD and firmware state, removed only
+that object, and a second audit reported it absent. Windows Boot Manager, the
+normal Monterey entry, persistent defaults, loaders, and partitions were
+unchanged.
 
-The Windows cleanup helper is prepared and manually reviewed, but it has not
-run because recovery deliberately stayed in normal Monterey. At the next
-planned Windows 10 boot, run it in `Audit` mode first and inspect the identified
-entry before explicitly confirming `Cleanup`.
+That run also exposed a Windows API edge case: a drive letter assigned by
+`mountvol /S` was not visible through `Get-Partition -DriveLetter`. The
+helper now verifies the mounted ESP by comparing its stable volume-GUID path
+with the reviewed partition access path. The corrected PowerShell 5.1 script
+passed `Audit`, `Cleanup`, and the post-cleanup audit on the real machine.
 
 ## Codex Mitigation Result
 
