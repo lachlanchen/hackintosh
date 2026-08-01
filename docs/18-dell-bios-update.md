@@ -124,9 +124,10 @@ Do not reset NVRAM as a routine part of the update. If the update removes or
 reorders the OpenCore firmware entry, use F12 to select the internal OpenCore
 EFI or Windows recovery path, then restore only the missing boot entry.
 
-At the OpenCore picker, boot the protected Monterey recovery system first.
-Verify Ethernet, SSH, graphics acceleration, and Metal. Then boot Sequoia and
-repeat the checks.
+At the OpenCore picker, boot Sequoia and verify Ethernet, SSH, graphics
+acceleration, and Metal. Reveal the auxiliary Sequoia APFS Recovery entry with
+Space when recovery validation is required. The former Monterey fallback was
+retired on 2026-08-01 and must not be assumed to exist.
 
 ## Recovery USB
 

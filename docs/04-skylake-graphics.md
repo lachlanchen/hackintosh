@@ -45,8 +45,10 @@ framebuffer-stolenmem    = 00003001
 framebuffer-fbmem        = 00009000
 ```
 
-Because one EFI boots Monterey and Sequoia, `-igfxsklaskbl` is retained. The
-configuration was tested on Monterey before Sequoia.
+`-igfxsklaskbl` remains in the known-good EFI after the Monterey volume was
+retired. It is not required merely to support a second installed OS anymore,
+but its removal needs a separately hash-gated EFI candidate and physical boot
+test; storage cleanup is not a valid reason to alter working graphics policy.
 
 ## Verification
 
@@ -72,4 +74,3 @@ stack because it keeps Apple's Sequoia graphics binaries, the sealed system
 volume, and normal kernel collection behavior. Benchmarking should compare GUI
 responsiveness, Metal compute, video decode, sleep/wake, and multi-display
 behavior before adding optional performance properties such as RPS control.
-

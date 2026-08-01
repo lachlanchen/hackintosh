@@ -45,11 +45,10 @@ The internal SSD is 512.1 GB, but macOS does not own the whole device:
 | Allocation | Capacity used or assigned |
 | --- | ---: |
 | Windows partition | 269.3 GB |
-| Shared macOS APFS container | 240.2 GB |
-| Monterey System + Data | about 57.9 GB |
-| Sequoia System + Data | about 142.2 GB |
-| Shared Preboot + Recovery | about 7.8 GB |
-| APFS container free after cleanup | about 32.1 GB |
+| macOS APFS container | 240.2 GB |
+| Sequoia System + Data | about 127.2 GB |
+| APFS support volumes and container overhead | about 6.6 GB |
+| APFS container free after Monterey retirement and reboot | 106.4 GB |
 
 APFS dynamically shares the container. Sequoia's Data volume, which holds
 applications and user files, has quota 0 and can consume all container free
@@ -109,9 +108,11 @@ iCloud Drive storage optimization was already enabled. Photos optimization is
 also enabled after this incident. The additional per-user iCloud Drive job
 disablement stops document sync in both directions on this host; it was applied
 only after the main CloudDocs container reported caught-up and consistent.
-Photos remains enabled in optimized mode. These changes do not delete cloud
-data. Use the policy script's `rollback` mode to restore the captured launchd
-states before using iCloud Drive here again.
+Photos optimization was enabled at that checkpoint. Photos sync was later
+disabled for this development host and the supported `Delete from Mac` choice
+was accepted; the cloud library remains intact while local Photos data may
+shrink asynchronously. Use the policy script's `rollback` mode to restore the
+captured launchd states before using iCloud Drive here again.
 
 Audit and rollback:
 
@@ -122,10 +123,13 @@ Audit and rollback:
 ./scripts/install-macos-interactive-stability-guard.sh uninstall
 ```
 
-### Monterey fallback cleanup
+### Monterey fallback cleanup (historical)
 
-The retained Monterey 12.7.6 volume group remains bootable and keeps its user,
-SSH, UU, and core tool state. A guarded cleanup removed only fallback leftovers:
+This section records the intermediate state before Monterey retirement. Do not
+run its volume-specific commands on the current Sequoia-only layout.
+
+The retained Monterey 12.7.6 volume group was bootable and kept its user, SSH,
+UU, and core tool state. A guarded cleanup removed only fallback leftovers:
 
 - the completed 15 GiB `Install macOS Sequoia.app` bundle, after validating its
   bundle identifier;
@@ -196,6 +200,11 @@ Copying the helper to `/tmp` before execution is intentional: the source may
 reside on the APFS container that the repair must unmount. Copy the generated
 log from `/tmp` to persistent storage before leaving Recovery if it is needed.
 
+The later guarded volume-group deletion removed that Monterey group and its
+stale Preboot/Recovery records. Both active Sequoia volumes subsequently passed
+live APFS verification. See
+[OptiPlex 7050 Sequoia-only storage](22-optiplex-7050-sequoia-only-storage.md).
+
 ## Incident Evidence
 
 The host stopped answering Ethernet ARP, ping, SSH, Screen Sharing, and UU
@@ -237,10 +246,9 @@ repair mode was not used.
 These events are verified after the reboot but are not proof that either one
 caused the earlier lock. They explain why a low-risk resource guard is useful.
 
-Do not change the known-good shared Monterey/Sequoia EFI from this single
-incident. In particular, do not remove graphics properties or watchdog boot
-arguments without a hash-gated candidate, rollback EFI, and physical boot
-test.
+Do not change the known-good Sequoia EFI from this single incident. In
+particular, do not remove graphics properties or watchdog boot arguments
+without a hash-gated candidate, rollback EFI, and physical boot test.
 
 ## Login Session Handoff
 

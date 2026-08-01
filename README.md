@@ -2,9 +2,10 @@
 
 # Hackintosh Sequoia Recovery Lab
 
-Private operator reference for a Dell OptiPlex 7050 dual-boot development
-workstation upgraded from macOS Monterey to macOS Sequoia without sacrificing
-the working Monterey recovery system.
+Operator reference for a Dell OptiPlex 7050 dual-boot development workstation
+upgraded from macOS Monterey to macOS Sequoia. After Sequoia proved stable, the
+old Monterey volume group was retired with guarded identity checks and an
+off-machine EFI backup.
 
 > This is an unsupported configuration. Apple licenses macOS and Xcode for
 > Apple-branded hardware. The repository documents interoperability and
@@ -13,15 +14,15 @@ the working Monterey recovery system.
 
 ## Verified Result
 
-| Area | Verified state on 2026-07-25 |
+| Area | Verified state on 2026-08-01 |
 | --- | --- |
-| Recovery OS | Monterey 12.7.6 (`21H1320`), preserved and bootable |
+| Recovery OS | Sequoia APFS Recovery; the former Monterey group is removed |
 | Development OS | Sequoia 15.7.7 (`24G720`), sealed system volume |
 | Bootloader | OpenCore 1.0.7 |
 | CPU / GPU | Intel i5-6500 / HD Graphics 530 |
 | Graphics path | HD530 presented as Kaby Lake HD630 through WhateverGreen |
 | Acceleration | 1536 MB dynamic VRAM, Apple Kaby Lake driver, Metal 3 |
-| Storage | Monterey and Sequoia share one APFS container dynamically |
+| Storage | One Sequoia System/Data group; 106.4 GB APFS space free after reboot |
 | Network | Intel Ethernet verified; AirDrop unavailable without AWDL Wi-Fi |
 | iOS toolchain | Xcode 26.3, iOS 26.3.1 runtime, signed archive/export verified |
 | Updates | Manual installation only; Tahoe is outside the validated boundary |
@@ -53,7 +54,9 @@ to use its native Apple Kaby Lake graphics driver.
 | [Surface Book 2 storage and picker](docs/16-surface-book-2-storage-and-picker.md) | Verified Ubuntu LVM topology, clean picker policy, and guarded future reclaim |
 | [Surface Book 2 space audit](docs/17-surface-book-2-space-audit.md) | Ranked, non-destructive cleanup and external-storage plan |
 | [Dell BIOS updates](docs/18-dell-bios-update.md) | Guarded firmware inventory, update, and recovery workflow |
+| [OptiPlex 7050 UU Remote reliability](docs/19-optiplex-7050-uuremote-reliability.md) | Freeze evidence, storage guards, and unattended remote recovery |
 | [OptiPlex 3040 Monterey freeze handoff](docs/20-optiplex-3040-monterey-freeze-handoff.md) | Framebuffer evidence, failed handoff recovery, reversible picker cleanup, and CLI fallback |
+| [OptiPlex 7050 Sequoia-only storage](docs/22-optiplex-7050-sequoia-only-storage.md) | Guarded Monterey retirement, picker cleanup, and post-reboot acceptance |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary

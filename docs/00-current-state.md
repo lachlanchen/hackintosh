@@ -1,24 +1,30 @@
 # Current State
 
-Status date: 2026-07-27
+Status date: 2026-08-01
 
 ## Verified
 
 - Hardware: Dell OptiPlex 7050, Intel Core i5-6500, Intel HD Graphics 530,
   16 GB memory.
 - OpenCore: 1.0.7.
-- Recovery system: macOS Monterey 12.7.6, build `21H1320`.
+- Recovery system: the APFS Recovery volume associated with Sequoia. The former
+  Monterey System/Data volume group was retired on 2026-08-01.
 - Development system: macOS Sequoia 15.7.7, build `24G720`.
 - Sequoia boots from its original Apple-sealed system snapshot.
 - Sequoia graphics use `AppleIntelKBLGraphics` and
   `AppleIntelKBLGraphicsFramebuffer` 23.0.7.
 - Sequoia reports 1536 MB dynamic VRAM and Metal 3.
-- Monterey also boots and remains accelerated with the shared Kaby identity.
+- OpenCore defaults to Sequoia after five seconds. Its graphical picker exposes
+  Windows while keeping auxiliary Recovery entries hidden unless requested.
 - Ethernet and SSH are functional after reboot.
 - OCLP root-patch launch agents, daemons, app, and privileged helper were
   removed with the signed/notarized 2.4.1 uninstaller.
-- The macOS APFS container is 240.2 GB and dynamically shared. At the verified
-  checkpoint, 156.0 GB was unallocated inside the container.
+- The macOS APFS container is 240.2 GB and now contains one System/Data volume
+  group. After Monterey retirement and a clean reboot, 106.4 GB was
+  unallocated inside the container.
+- Sequoia System and Data both passed live read-only APFS verification. The
+  blessed snapshot, NVRAM boot path, Preboot, and Recovery records all resolve
+  only to the active Sequoia volume group.
 - Windows remains on a separate GPT partition and retains its firmware boot
   manager.
 - System sleep, display sleep, disk sleep, standby, and automatic power-off are
@@ -69,9 +75,10 @@ These values describe the sanitized intent, not a complete EFI:
 | `framebuffer-stolenmem` | `00003001` |
 | `framebuffer-fbmem` | `00009000` |
 
-`-igfxsklaskbl` is retained because the same EFI also boots Monterey. Current
-WhateverGreen documentation says it is not required on macOS 13 or newer, but
-it enforces Kaby Lake graphics drivers when the shared EFI boots older macOS.
+`-igfxsklaskbl` remains in the known-good EFI after Monterey retirement.
+Current WhateverGreen documentation says it is not required on macOS 13 or
+newer, but removing a graphics boot argument is a separate change that needs a
+hash-gated EFI candidate and physical boot validation.
 
 ## Deliberately Not Enabled
 

@@ -29,23 +29,16 @@ after a separately validated EFI candidate proves Sequoia still boots.
 
 ## Picker and Windows
 
-During installation, `ScanPolicy` was limited to internal APFS so OpenCore would
-not select Windows automatically. Windows Boot Manager remains in firmware.
-
-Restoring a Windows picker entry is a separate change. Before enabling it:
-
-1. Make Sequoia the persistent startup disk.
-2. Confirm OpenCore's launcher entry survives a cold boot.
-3. Add or expose Windows without changing the default selection.
-4. Test a one-time Windows boot and a one-time return to Sequoia.
+The current graphical picker uses the GoldenGate resource set, remains visible
+for five seconds, and hides auxiliary entries by default. Sequoia is the
+persistent startup disk. Windows Boot Manager remains independently preserved
+and visible without becoming the default.
 
 ## Naming
 
-The two macOS volumes are deliberately named:
-
-- `Mac` for the protected Monterey recovery system
-- `Sequoia-Dev` for the development system
+The installed macOS volume is named `Sequoia-Dev`. The former `Mac` Monterey
+volume group was retired after Sequoia acceptance and no longer appears in
+APFS Preboot or Recovery metadata.
 
 OpenCore may also show APFS Recovery. Never identify an entry by icon position
 alone; use the volume label and verify the root volume after SSH returns.
-

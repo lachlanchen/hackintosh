@@ -5,16 +5,17 @@ Use the least invasive recovery path that still works.
 ## Recovery Order
 
 1. **Sequoia SSH works:** inspect logs and fix only the development volume.
-2. **OpenCore picker works:** boot the original volume named `Mac` (Monterey).
-3. **Monterey SSH works:** repair the Sequoia snapshot or live EFI from
-   Monterey.
-4. **Windows boots:** use the prepared Windows BCD OpenCore entry and EFI
+2. **OpenCore picker works:** boot `Sequoia-Dev`, or reveal the auxiliary APFS
+   Recovery entry with Space when Sequoia itself cannot start.
+3. **Windows boots:** use the prepared Windows BCD OpenCore entry and EFI
    restore script.
-5. **No installed OS boots:** use separately verified external recovery media.
+4. **No installed OS boots:** use separately verified external recovery media.
 
 Do not erase or repartition the disk while any earlier recovery path remains.
+The former Monterey volume group was deliberately removed on 2026-08-01 and is
+not a recovery path anymore.
 
-## Distinguish the Two macOS Systems
+## Identify the macOS System
 
 After SSH returns, do not trust the desktop appearance. Verify:
 
@@ -23,23 +24,19 @@ sw_vers
 diskutil info / | grep -E 'Device Node|Volume Name|APFS Volume Group|Sealed'
 ```
 
-Expected volume names:
-
-- `Mac`: protected Monterey recovery system
-- `Sequoia-Dev`: development system
+The expected installed system is `Sequoia-Dev`. Its root and Data devices must
+belong to the same APFS volume group before making storage or boot changes.
 
 ## Select One Volume for the Next Boot
 
 From macOS:
 
 ```bash
-sudo bless --mount /Volumes/Sequoia-Dev --setBoot --nextonly --verbose
+sudo bless --mount / --setBoot --nextonly --verbose
 ```
 
-To test Monterey while running Sequoia, mount the Monterey system volume first
-and use the same one-time pattern. Always inspect the generated
-`efi-boot-next` path and confirm it contains the intended APFS volume-group
-path before rebooting.
+Always inspect the generated `efi-boot-next` path and confirm it contains the
+active Sequoia APFS volume-group path before rebooting.
 
 ## Revert a Root-Patched Sequoia Snapshot
 
@@ -49,7 +46,8 @@ List snapshots:
 diskutil apfs listSnapshots /
 ```
 
-When repairing the non-running Sequoia volume from Monterey:
+When repairing the non-running Sequoia volume from APFS Recovery or another
+separately verified macOS environment:
 
 ```bash
 sudo diskutil unmount <sequoia-system-device>
@@ -83,4 +81,3 @@ copy the Mac EFI over the Windows EFI partition.
 3. Verify Ethernet/SSH.
 4. Verify loaded graphics kext and Metal.
 5. Reboot once more before declaring the repair stable.
-
