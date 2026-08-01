@@ -1,6 +1,6 @@
 # OptiPlex 3040 Monterey Freeze Handoff
 
-Status date: 2026-07-30
+Status date: 2026-08-01
 
 Status: leading framebuffer cause identified; low-risk persistent controls
 applied; native-graphics candidate staged but **not accepted or promoted**.
@@ -186,8 +186,52 @@ also removes the rejected Electron launcher.
 ```
 
 The live installation verified `codex-cli 0.146.0`; that is an evidence
-snapshot, not a version pin. Keep using the text-only CLI until a graphics
-candidate passes physical display, UU, VNC, SSH, and protected-log acceptance.
+snapshot, not a version pin. The CLI remains the lowest-graphics fallback.
+
+### Accepted narrow desktop mode
+
+On 2026-08-01, the desktop app was retested with the GPU compositor retained
+but three narrower Chromium paths disabled:
+
+```text
+--disable-gpu-rasterization
+--disable-zero-copy
+--disable-gpu-memory-buffer-video-frames
+```
+
+This is not the rejected full software-rendering mode. Process inspection
+confirmed that the GPU helper remained active while renderer
+`--enable-zero-copy` was absent. The physical operator confirmed that opening
+Codex produced no flash. Across twelve ten-second samples, startup GPU use
+settled from about 24 percent to 0.4-0.6 percent, main-process CPU settled to
+zero, and no new Codex resource diagnostic appeared. Memory remained 79
+percent free with zero swap. The protected kernel-log delta contained no
+`TxnHang`, fake-VBL, skipped-flip, GPU-restart, gamma, or watchdog event, and
+SSH, ARD/VNC, and all native UU processes remained available.
+
+[`install-optiplex-3040-codex-stable-launcher.sh`](../scripts/install-optiplex-3040-codex-stable-launcher.sh)
+packages that exact tested launch as `~/Applications/Codex Stable.app` with a
+Desktop shortcut. It verifies the original app's deep signature, bundle ID,
+and OpenAI Team ID before launch; gracefully closes an ordinary Codex process;
+checks that all three flags reached the replacement process; and never edits
+the signed app. Reopening the stable launcher activates an existing accepted
+process instead of spawning another instance.
+
+```bash
+./install-optiplex-3040-codex-stable-launcher.sh install
+./install-optiplex-3040-codex-stable-launcher.sh audit
+./install-optiplex-3040-codex-stable-launcher.sh uninstall
+```
+
+Use `Codex Stable.app`, rather than the original Dock/Finder icon, for desktop
+sessions on this 3040. The ordinary icon bypasses these process flags. The
+text-only launcher remains available if flashing returns after an upstream app
+or macOS change. Uninstall removes only the local launcher and shortcut.
+
+The screensaver and display-transition trigger is separately bounded:
+screensaver idle time and display sleep are both zero, as are system and disk
+sleep. These settings persist across restart. The known-good Kaby-spoofed EFI
+was not changed, and the unaccepted native-graphics candidate was not promoted.
 
 A ten-minute recovery watch completed 20 ping/SSH checks without failure.
 WindowServer stayed near idle, swap stayed zero, and the protected kernel-log
