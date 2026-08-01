@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the OptiPlex 7050 macOS remote host every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=5s
+RandomizedDelaySec=10
+Persistent=true
+
+[Install]
+WantedBy=timers.target

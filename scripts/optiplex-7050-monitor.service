@@ -1,0 +1,8 @@
+[Unit]
+Description=Monitor the OptiPlex 7050 macOS remote host
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/optiplex-7050-monitor.conf
+ExecStart=%h/.local/libexec/monitor-optiplex-7050-from-linux.sh
+TimeoutStartSec=30
