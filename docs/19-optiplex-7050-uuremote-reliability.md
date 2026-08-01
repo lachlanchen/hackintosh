@@ -138,6 +138,13 @@ The cleanup reported 17,441 MiB reclaimed. Monterey Data fell from 42.5 GB to
 26.3, iOS 26.3 runtime, projects, pictures, archives, and Codex state were
 preserved.
 
+A later allow-listed Sequoia cleanup removed 3,042 MiB reported by `du` from
+CloudKit cache and 2,475 MiB from closed GlassAgent logs. Concurrent APFS and
+system activity means directory totals do not translate one-for-one into
+container free space; the authoritative final container values were 188.2 GB
+used and 52.1 GB free (about 48.5 GiB). There are no snapshots on the Sequoia
+Data volume.
+
 Audit and apply with the mounted Monterey Data path supplied explicitly:
 
 ```bash
@@ -156,6 +163,38 @@ volumes in the same APFS container are mounted. At the next planned
 maintenance window, boot macOS Recovery and run Disk Utility First Aid on the
 APFS container and Monterey volume group. This is not a reason to change EFI
 or erase the fallback.
+
+The equivalent guarded Terminal workflow is
+[`repair-optiplex-7050-apfs-from-recovery.sh`](../scripts/repair-optiplex-7050-apfs-from-recovery.sh).
+Recovery can assign different disk numbers on every boot, so first discover
+them rather than copying identifiers from this document:
+
+```bash
+/usr/sbin/diskutil list
+/usr/sbin/diskutil apfs listVolumeGroups
+
+/bin/cp /Volumes/<source>/repair-optiplex-7050-apfs-from-recovery.sh \
+  /tmp/repair-optiplex-7050-apfs-from-recovery.sh
+
+/bin/sh /tmp/repair-optiplex-7050-apfs-from-recovery.sh audit \
+  --container diskN --data diskNsN
+
+/bin/sh /tmp/repair-optiplex-7050-apfs-from-recovery.sh repair \
+  --container diskN --data diskNsN \
+  --confirm REPAIR-7050-MONTEREY-DATA
+```
+
+The script checks every Recovery command by absolute path, validates APFS
+container membership and the Data role, and refuses a container hosting the
+current root. It uses a normal unmount only, repairs and verifies the selected
+volume, remounts the container, and writes a timestamped log under `/tmp`.
+It never force-unmounts, erases, repartitions, modifies EFI, or depends on
+shell profile environment variables. If normal unmount fails, close Disk
+Utility windows and rerun it; do not substitute a forced unmount.
+
+Copying the helper to `/tmp` before execution is intentional: the source may
+reside on the APFS container that the repair must unmount. Copy the generated
+log from `/tmp` to persistent storage before leaving Recovery if it is needed.
 
 ## Incident Evidence
 

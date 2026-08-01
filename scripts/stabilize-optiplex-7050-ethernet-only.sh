@@ -334,6 +334,8 @@ cleanup_generated_data() {
   clear_directory_contents "$HOME/.gradle/caches"
   clear_directory_contents "$HOME/Library/Caches/CocoaPods"
   clear_directory_contents "$HOME/Library/Caches/org.swift.swiftpm"
+  clear_directory_contents "$HOME/Library/Caches/CloudKit"
+  clear_directory_contents "$HOME/Library/Logs/GlassAgent"
   printf 'Preserved projects, Codex state, UU data, simulator runtimes, and APFS volumes.\n'
 }
 

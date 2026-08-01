@@ -176,6 +176,8 @@ reclaim_generated_data() {
   clear_directory_contents "$HOME/.gradle/caches"
   clear_directory_contents "$HOME/Library/Caches/CocoaPods"
   clear_directory_contents "$HOME/Library/Caches/org.swift.swiftpm"
+  clear_directory_contents "$HOME/Library/Caches/CloudKit"
+  clear_directory_contents "$HOME/Library/Logs/GlassAgent"
 
   after_kb=$(df -k /System/Volumes/Data 2>/dev/null | awk 'NR == 2 { print $4 + 0 }')
   date +%s > "$RELIEF_STAMP"
