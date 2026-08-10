@@ -172,6 +172,70 @@ The verified 2026-08-10 run met those conditions. The renderer policy remained
 `none`, Spotlight returned to its normal priority, and no upload, Simulator UI,
 `SimMetalHost`, or `SimRenderServer` process remained after cleanup.
 
+## Post-Reboot Physical Test Recovery
+
+The next physical-iPad test exposed two separate issues that should not be
+confused with the GPU hang:
+
+1. An SSH login could enumerate the Apple Development identities but direct
+   `codesign` returned `errSecInternalComponent`. Unlocking the login keychain
+   and restoring the `apple-tool:,apple:,codesign:` partition list was
+   necessary but not sufficient because the SSH process remained in a
+   different audit session from the logged-in desktop.
+2. Running the same signing/build process in the active GUI audit session
+   succeeded. The app and XCTest runner compiled, signed with the LazyingArt
+   development identity, and installed on the physical iPad without starting
+   Simulator or `SimMetalHost`.
+
+For an interactive maintenance session, unlock and repair the key ACL without
+putting the login password in shell history:
+
+```bash
+security unlock-keychain "$HOME/Library/Keychains/login.keychain-db"
+security set-key-partition-list \
+  -S apple-tool:,apple:,codesign: -s \
+  "$HOME/Library/Keychains/login.keychain-db"
+```
+
+For a headless command initiated over SSH, enter the logged-in user's GUI audit
+session and then drop back to that user before invoking Xcode:
+
+```bash
+console_user="$(stat -f '%Su' /dev/console)"
+console_uid="$(id -u "$console_user")"
+
+sudo launchctl asuser "$console_uid" \
+  sudo -u "$console_user" env \
+    HOME="/Users/$console_user" \
+    DEVELOPER_DIR=/path/to/Xcode.app/Contents/Developer \
+    xcodebuild <physical-device arguments>
+```
+
+Do not use this pattern to bypass a locked desktop or an OS consent dialog. It
+only gives an already authorized command the same audit session as the active
+user.
+
+The physical test then stopped at the device boundary with
+`Timed out while enabling automation mode`. The iPad was paired, available,
+unlocked since boot, and had Developer Mode enabled. The failure therefore did
+not justify falling back to Simulator. Treat device-side UI Automation as a
+separate one-time physical setup gate.
+
+After a UI-test initialization failure, Xcode may start a ten-minute
+`devicectl diagnose` collection and keep `xcodebuild` alive even though no test
+is progressing. Inspect the exact process tree and terminate only that failed
+job before continuing release work:
+
+```bash
+ps -axo pid,ppid,state,etime,%cpu,%mem,command | \
+  grep -E 'xcodebuild|devicectl diagnose' | grep -v grep
+```
+
+The verified cleanup removed the temporary XCTest runner, ended the bounded
+Xcode/diagnostic process tree, restored Spotlight to nice level 0, resumed
+Photos analysis, and removed the temporary build directory. No Simulator UI or
+Metal renderer appeared, and no new GPU-reset report was created.
+
 ## Reverting The UI Guard
 
 Re-enable Apple's default framebuffer renderer only for a bounded diagnostic:
