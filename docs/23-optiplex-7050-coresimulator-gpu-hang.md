@@ -138,9 +138,12 @@ The 2026-08-10 EchoMind release used two deliberately separate paths:
 
 That exact headless run validated and uploaded the 9,588,830-byte EchoMind
 iOS/watchOS build 64 without errors under delivery resource
-`32220390-cb26-4240-9bb3-cfe2b6d1216a`. Authenticated readback then reported
-the build `VALID`, unexpired, correctly scoped, unattached, and not submitted.
-No new `*.gpuRestart` report appeared during or after the release window.
+`32220390-cb26-4240-9bb3-cfe2b6d1216a`. The guarded public-beta workflow then
+attached that exact build and authenticated readback reported it `VALID`,
+unexpired, `APPROVED`, and available from the existing 1,000-tester public
+TestFlight link. Formal App Store version `1.0` remained separate and
+unsubmitted. No new `*.gpuRestart` report appeared during or after the release
+window.
 
 This separation is part of the release safety case: a provider-specific VPN
 route must never become the Mac's default route, and store publication must not
@@ -171,6 +174,12 @@ is stable for the headless release path.
 The verified 2026-08-10 run met those conditions. The renderer policy remained
 `none`, Spotlight returned to its normal priority, and no upload, Simulator UI,
 `SimMetalHost`, or `SimRenderServer` process remained after cleanup.
+
+A follow-up after more than five hours of uptime still showed about 48 GiB of
+free APFS space, zero booted simulators, and no Simulator UI, Metal renderer,
+`xcodebuild`, or `devicectl diagnose` job. Idle CoreSimulator registration
+services remained harmless. This checkpoint supports continued command-line
+and physical-device release work; it does not justify reopening Simulator UI.
 
 ## Post-Reboot Physical Test Recovery
 
