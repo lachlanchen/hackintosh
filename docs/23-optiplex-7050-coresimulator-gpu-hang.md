@@ -279,6 +279,29 @@ the APFS container retained about 48 GiB free. CoreSimulator helper services
 may exist while every virtual device is shut down; the dangerous evidence is a
 booted device or active renderer, not an idle service registration.
 
+## Latest Reboot Recovery Checkpoint
+
+After the desktop was reported frozen again at a Simulator loading screen, the
+host was recovered over key-only LAN SSH without reopening Simulator. The
+post-reboot audit at 2026-08-10 19:56 CST established all of the following:
+
+- macOS 15.7.7 had been up for approximately six hours and SSH was responsive;
+- Xcode 26.3 remained the selected and usable developer installation;
+- two stale CoreSimulator service trees existed, but no virtual device was
+  booted and no `Simulator.app`, `SimMetalHost`, or `SimRenderServer` process
+  was running;
+- `simctl shutdown all` completed, then the stale simulator service processes
+  were terminated and allowed to re-register cleanly;
+- the three user defaults still read `none`, `0`, and `1`; and
+- the diagnostic inventory still contained exactly the four previously
+  recorded GPU-reset reports, newest at 2026-08-10 02:38:45 CST. There was no
+  new reset report attributable to the later frozen screen.
+
+Do not infer that a missing new `gpuRestart` report makes Simulator safe. A
+stalled loading UI can still leave the desktop unusable before macOS emits a
+kernel diagnostic. The recovery decision remains the same: leave virtual
+devices shut down and use the paired physical iPad/iPhone path for release QA.
+
 ## External Test-Device Network Isolation
 
 The Android Play listing check used a third, RAM-only router overlay bound to
