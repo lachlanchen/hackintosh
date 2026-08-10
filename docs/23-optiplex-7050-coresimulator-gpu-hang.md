@@ -356,6 +356,25 @@ restored the original Astrill endpoint, and confirmed ordinary Ubuntu and phone
 traffic used the same Direct ISP path. No temporary signed URL, tester identity,
 device address, MAC address, or router credential was written to Git.
 
+The root-sealed upload-signed QA APK was then independently checked as exact
+version code `65`: its application ID, source commit, SHA-256, provenance, and
+upload certificate all matched the formal manifest. This qualifies the APK for
+application QA, but not as a Play-signed install. The attached MIUI phone still
+required its secure device-side **Install via USB** confirmation. Both relevant
+Developer options were enabled, but an injected ADB tap did not complete the
+security dialog and later attempts remained `INSTALL_FAILED_USER_RESTRICTED`.
+Temporary package-verifier experiments were restored. Do not spoof Play as the
+installer, disable persistent security controls, or call this an installation;
+leave the physical-install gate open until the device accepts the exact APK.
+
+A physical iPad remained visible to Xcode command-line device services, but the
+exact EchoMind app was not installed on it, so no iOS launch or screenshot QA
+was claimed. Querying the physical inventory re-registered idle CoreSimulator
+helpers even though no virtual device was booted. Stop the user registration
+processes and root `simdiskimaged` again after such a query; the final process
+readback was empty for Simulator, CoreSimulator, SimMetalHost, and
+SimRenderServer.
+
 ## Reverting The UI Guard
 
 Re-enable Apple's default framebuffer renderer only for a bounded diagnostic:
