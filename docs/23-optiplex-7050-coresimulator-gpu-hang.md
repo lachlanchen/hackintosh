@@ -314,6 +314,48 @@ removed that owner by generation and a fresh router readback reported no
 remaining phone overlay. Use the `astrill-lazy device-flow` command for this
 pattern; do not replace it with host-wide or whole-device VPN routing.
 
+A later routing audit found an independent native Astrill setting that changed
+that conclusion: the applet's website mode was still global (`mode 0`). The
+phone overlay itself remained source scoped, but unmatched Ubuntu and Mac
+traffic could still inherit the applet's global tunnel. The previous native
+site list was saved in private mode-`0600` storage, the native website policy
+was changed to Direct-by-default include mode with an empty list, and the
+original endpoint was reconnected through the companion. Final readback
+reported both native website and device defaults as Direct, a healthy tunnel,
+the original server selection, and no phone overlay. Independent public-egress
+checks from Ubuntu and the phone then matched the normal ISP path.
+
+This is an important distinction: a source-scoped companion overlay does not
+prove that the native Astrill defaults are also source scoped. Verify both
+layers before claiming Codex, SSH, or another workstation stayed Direct.
+
+## Play-Signed Physical Device Result
+
+The same physical-phone run verified the following release facts without
+launching an iOS Simulator:
+
+- Google Play Console reported EchoMind Internal testing as Active with
+  version code `65` available to internal testers.
+- The invited account on the phone accepted the internal-test program, and
+  Play scheduled version `65` as five split downloads.
+- The signed download URLs selected China-local Google CDN hostnames. Several
+  DNS-selected edges timed out. Reachable sibling edges completed TLS, but the
+  candidate downloads returned HTTP `400` because the signed delivery context
+  and receiving edge/egress did not agree.
+- Switching among the original, Hong Kong, and China-optimized Astrill
+  endpoints did not produce a valid end-to-end Play download.
+
+The result proves the Console candidate and tester entitlement exist. It does
+not prove a Play-signed installation, launch, or deployment-certificate check.
+Keep those physical-device gates open and do not infer an application defect
+from this provider/CDN delivery failure.
+
+Cleanup force-stopped the failed Play retry, removed the owner-scoped overlay,
+removed every temporary packet-mark and destination-translation chain,
+restored the original Astrill endpoint, and confirmed ordinary Ubuntu and phone
+traffic used the same Direct ISP path. No temporary signed URL, tester identity,
+device address, MAC address, or router credential was written to Git.
+
 ## Reverting The UI Guard
 
 Re-enable Apple's default framebuffer renderer only for a bounded diagnostic:
