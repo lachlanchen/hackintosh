@@ -236,6 +236,52 @@ Xcode/diagnostic process tree, restored Spotlight to nice level 0, resumed
 Photos analysis, and removed the temporary build directory. No Simulator UI or
 Metal renderer appeared, and no new GPU-reset report was created.
 
+## Post-Reboot Xcode Selection Recovery
+
+A later reboot left `xcode-select` pointing at a no-longer-present
+`/Applications/Xcode-26.6.0.app/Contents/Developer`, although the validated
+Xcode 26.3 bundle remained intact at
+`/Applications/Xcode-26.3.0.app`. This made `xcrun` fail before it could even
+inspect simulator state. It was a stale path, not an Xcode installation loss.
+
+Verify the selected path and the replacement bundle before changing anything:
+
+```bash
+xcode-select -p
+test -x /Applications/Xcode-26.3.0.app/Contents/Developer/usr/bin/xcodebuild
+/Applications/Xcode-26.3.0.app/Contents/Developer/usr/bin/xcodebuild -version
+```
+
+Then correct the global developer directory and shut down virtual devices
+without opening Simulator:
+
+```bash
+sudo xcode-select --switch \
+  /Applications/Xcode-26.3.0.app/Contents/Developer
+xcodebuild -version
+xcrun simctl shutdown all
+xcrun simctl list devices | grep '(Booted)' || true
+```
+
+The verified readback reported Xcode 26.3 build `17C529`, zero booted devices,
+renderer policy `none`, and no `Simulator`, `SimMetalHost`, `xcodebuild`, or
+`devicectl diagnose` job. The historical GPU-report count remained four and
+the APFS container retained about 48 GiB free. CoreSimulator helper services
+may exist while every virtual device is shut down; the dangerous evidence is a
+booted device or active renderer, not an idle service registration.
+
+## External Test-Device Network Isolation
+
+The Android Play listing check used a third, RAM-only router overlay bound to
+the test phone's exact IPv4 `/32` and verified LAN MAC address. Only the two
+hostnames observed in Play Store logs were included, on TCP and UDP port 443.
+Ubuntu, Codex, SSH, and the Mac retained their existing source-bound routes.
+
+The real EchoMind internal-testing listing loaded successfully. Cleanup then
+removed that owner by generation and a fresh router readback reported no
+remaining phone overlay. Use the `astrill-lazy device-flow` command for this
+pattern; do not replace it with host-wide or whole-device VPN routing.
+
 ## Reverting The UI Guard
 
 Re-enable Apple's default framebuffer renderer only for a bounded diagnostic:
