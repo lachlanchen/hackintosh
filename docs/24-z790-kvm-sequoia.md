@@ -203,9 +203,9 @@ validated, stored mode `0600`, and is independent of the OpenCore identity.
 
 ### Verified post-patch authentication boundary
 
-A single post-patch retry used a visibly verified account field and exactly 12
-masked password characters. The result was different from the pre-patch
-DeviceCheck failure:
+A single post-patch retry used a visibly verified account field and the
+expected masked password character count. The result was different from the
+pre-patch DeviceCheck failure:
 
 - DNS, IPv4/IPv6 path selection, TCP, and TLS 1.3 succeeded on `en0`;
 - `akd` sent the request and received HTTP 200;
