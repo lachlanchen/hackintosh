@@ -8,12 +8,13 @@ this repository.
 
 ## Outcome and boundary
 
-The selected target is **macOS Sequoia**, not Tahoe. The repository's tested
-maintenance boundary is Sequoia 15.7.7, while Tahoe remains outside that
-boundary. The recovery image is downloaded directly from Apple's catalog and
-verified by Apple's chunklist through the audited OSX-KVM fetcher. The image
-used on 2026-08-29 identifies itself as Sequoia 15.4.1 (`24E263`); updating the
-installed guest to 15.7.7 is a later, separate checkpoint.
+The selected target is **macOS Sequoia**, not Tahoe. The recovery image is
+downloaded directly from Apple's catalog and verified by Apple's chunklist
+through the audited OSX-KVM fetcher. The recovery environment used on
+2026-08-29 identifies itself as Sequoia 15.4.1 (`24E263`), but the online
+installer delivered Sequoia 15.7.9 (`24G830`). Apple identifies 15.7.9 as a
+security update recommended for Sequoia users. There is no reason to downgrade
+this guest to the earlier 15.7.7 checkpoint.
 
 This is an unsupported interoperability experiment. Apple's Sequoia license
 restricts macOS virtualization to Apple-branded computers. The profile is
@@ -29,11 +30,11 @@ The profile deliberately does not:
 
 ## Verified installation result
 
-On 2026-08-29 the Apple-verified Sequoia 15.4.1 recovery completed both
-installation stages and booted the installed virtual disk into Setup
-Assistant. The run stopped at **Select Your Country or Region**: installation
-is complete, while region, keyboard, Apple ID, migration, and local-account
-choices remain intentionally user-owned.
+On 2026-08-29 the Apple-verified recovery completed both installation stages
+and booted the installed virtual disk into Setup Assistant. Setup Assistant
+was completed and `sw_vers` verified Sequoia 15.7.9 (`24G830`). Apple Account
+sign-in initially returned **Verification Failed — An unknown error occurred**;
+the evidence and repair boundary are recorded below.
 
 The first stage downloaded and prepared the system in Recovery, then OpenCore
 automatically selected the installer volume after reboot. The second stage
@@ -102,6 +103,119 @@ The private `state/` directory contains writable OVMF NVRAM, a generated VM
 UUID and MAC address, QMP socket, PIDs, and an asset manifest. None belongs in
 Git. The OpenCore image is attached with QEMU snapshot mode so the audited
 source image remains unchanged.
+
+## Apple Account identity repair
+
+The initial Apple Account failure exposed two concrete local defects:
+
+- the audited OSX-KVM template still contained its public placeholder serial,
+  MLB, all-zero SystemUUID, and fixed example ROM;
+- macOS exposed the working Ethernet service as `en0`, but `ioreg` found no
+  `built-in` property. QEMU's live PCI topology placed `net0` at
+  `PciRoot(0x0)/Pci(0x4,0x0)`, a path absent from the template properties.
+
+Dortania's iServices guidance requires a coherent SystemProductName, serial,
+MLB, SystemUUID, ROM, and built-in `en0`. The repair therefore keeps
+`iMac19,1`, generates one private serial pair with the official OpenCore 1.0.7
+`macserial`, synchronizes the ROM with a stable Apple-OUI QEMU MAC, uses one
+SystemUUID for both QEMU and OpenCore, and injects `built-in = 01` at the
+observed PCI path.
+
+Run this only while the guest is stopped:
+
+```bash
+./scripts/hackintosh-kvm.sh apple-services
+./scripts/hackintosh-kvm-apple-services.sh verify
+```
+
+The builder is intentionally idempotent: once its private identity validates,
+another `prepare` refuses to rotate it. It validates the plist with the
+matching OpenCore 1.0.7 `ocvalidate`, round-trips the config through the EFI
+filesystem, checks the rebuilt qcow2, and records only hashes and non-secret
+metadata in a private manifest. Serial, MLB, ROM, UUID, MAC, config, EFI image,
+and pre-change OVMF backup remain mode `0600` under the private SATA runtime.
+
+The original hash-pinned OpenCore image is never modified. A complete stopped
+guest-disk copy named for the 15.7.9 pre-repair checkpoint supplies the data
+rollback. For an OpenCore identity rollback, stop the guest and run:
+
+```bash
+./scripts/hackintosh-kvm-apple-services.sh rollback
+```
+
+That preserves the private image, restores the prior QEMU MAC/UUID, and makes
+the launcher select the audited template on the next boot. Re-enable the
+validated private identity with `enable`, again only while stopped. No NVRAM
+reset was performed during the verified repair.
+
+The first retry with the repaired identity still failed. Unified AuthKit logs
+then narrowed the remaining fault precisely:
+
+- `en0` was the default route and reported `IOBuiltin = Yes`;
+- Apple's OpenID endpoint returned HTTP 200 and the guest clock was correct;
+- `akd` failed Anisette/device provisioning with `ADIGetIDMSRouting -45061`,
+  `AKAnisetteError -8008`, and BAA attestation `-10000`;
+- the provisioning-start request succeeded, but provisioning-finish returned
+  HTTP 401 and surfaced as the generic verification dialog.
+
+This evidence rules out DNS, routing, and a missing built-in Ethernet property.
+It does not prove an Apple-side account ban: a stale first-boot AuthKit cache,
+an incorrectly entered account name, or rejected attestation can produce the
+same user-facing dialog. The small `~/Library/Caches/com.apple.akd` directory
+was therefore archived privately, removed, and allowed to regenerate during a
+clean guest reboot. No account database, keychain, or OpenCore NVRAM was
+deleted. The post-reboot sign-in page was reopened blank so the operator could
+re-enter the exact Apple Account and complete 2FA interactively.
+
+A locally correct identity cannot override an Apple-side account restriction;
+Dortania notes that some new or previously flagged accounts can still require
+Apple Support. Never rotate identities repeatedly or automate credential
+attempts. If the clean retry still fails with the same Anisette evidence, stop
+and make an explicit operator decision before the next reversible escalation:
+back up writable firmware, reset OpenCore NVRAM once, and retest the same
+identity. NVRAM was **not** reset in this run.
+
+## Guest login, power, wallpaper, and private access
+
+The existing macOS account was retained; no duplicate user was created.
+FileVault was already off, so automatic login could be enabled. Guest
+credentials, the dedicated SSH private key, known-host entry, AuthKit log, and
+cache backup are owner-only files under the private runtime `state/private/`
+directory. They are excluded from Git and must never be copied into an issue,
+commit, or public handoff.
+
+The verified post-reboot state was:
+
+- automatic login returned directly to the existing desktop and restored its
+  open windows;
+- `pmset` reported system sleep, display sleep, disk sleep, standby,
+  hibernation, and Power Nap as zero/off;
+- both screen-saver idle settings were zero;
+- a static built-in wallpaper was applied from the logged-in GUI session;
+- OpenSSH returned on host loopback port 2224 after reboot;
+- OpenCore remembered `Macintosh HD` after selecting it once with
+  Control+Enter at the picker.
+
+`systemsetup -setremotelogin on` was not used because Sequoia requires Terminal
+Full Disk Access for that command. Instead, the built-in
+`/System/Library/LaunchDaemons/ssh.plist` was enabled and bootstrapped through
+`launchctl`, and a dedicated key was installed. This avoids granting Terminal
+broad disk access and leaves SSH reachable only through QEMU's loopback-only
+forward.
+
+Prefer the interactive command below for automatic login because `-password -`
+keeps the secret out of shell history and process arguments:
+
+```bash
+sudo sysadminctl -autologin set -userName <short-name> -password -
+```
+
+On this guest, `sysadminctl` returned `SACSetAutoLoginPassword error:22` even
+though the account password and secure token were valid. The fallback wrote
+the standard loginwindow auto-login credential from the private password and
+set `autoLoginUser`; `sysadminctl -autologin status` then verified the result.
+That credential is reversible obfuscation, not encryption. Automatic login is
+therefore convenient but intentionally weakens local-at-console security.
 
 ## Installation workflow
 
@@ -192,6 +306,7 @@ Never select a host block device: none should be present in this profile.
 ./scripts/hackintosh-kvm.sh url
 ./scripts/hackintosh-kvm.sh stop
 ./scripts/hackintosh-kvm.sh logs
+./scripts/hackintosh-kvm-apple-services.sh status
 ```
 
 `stop` sends an ACPI power-button request over the private QMP socket. Use
@@ -209,8 +324,10 @@ because an upstream sample suggests it.
 ## Reproducibility checklist
 
 - `bash -n scripts/hackintosh-kvm.sh`
+- `bash -n scripts/hackintosh-kvm-apple-services.sh`
 - `systemd-analyze --user verify scripts/hackintosh-kvm.service`
 - `./scripts/hackintosh-kvm.sh verify`
+- `./scripts/hackintosh-kvm-apple-services.sh verify`
 - confirm ports 2224, 5941, and 6141 are loopback-only
 - confirm the 512 GB image remains sparse with `qemu-img info` and `du`
 - confirm no physical `/dev/*` disk or VFIO device appears in the QEMU command
@@ -218,7 +335,13 @@ because an upstream sample suggests it.
 
 ## Compatibility conclusion
 
-Sequoia is appropriate for this software-rendered VM. Tahoe can be fetched by
-current OSX-KVM and OpenCore has Tahoe-related compatibility work, but that is
-not equivalent to a tested workstation profile. Validate Sequoia first and
-clone the qcow2 before any future Tahoe experiment.
+Sequoia 15.7.9 is the verified software-rendered VM boundary. Tahoe can be
+fetched by current OSX-KVM and OpenCore has Tahoe-related compatibility work,
+but that is not equivalent to a tested workstation profile. Clone the stopped
+qcow2 before any future Tahoe experiment.
+
+Primary changing references:
+
+- [Apple: macOS Sequoia 15.7.9 security content](https://support.apple.com/en-ca/148171)
+- [Dortania: fixing iMessage and other services](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html)
+- [OpenCorePkg releases](https://github.com/acidanthera/OpenCorePkg/releases)

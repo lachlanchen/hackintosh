@@ -17,6 +17,8 @@ if [[ -f "$CONFIG_FILE" ]]; then
 fi
 
 RUNTIME_ROOT=${RUNTIME_ROOT:-$HOME/VirtualMachines/Hackintosh-KVM}
+STATE_DIR=$RUNTIME_ROOT/state
+LOG_DIR=$RUNTIME_ROOT/logs
 UPSTREAM_DIR=${UPSTREAM_DIR:-$RUNTIME_ROOT/upstream/OSX-KVM}
 RECOVERY_DIR=${RECOVERY_DIR:-$RUNTIME_ROOT/installer/com.apple.recovery.boot}
 DISK_IMAGE=${DISK_IMAGE:-$RUNTIME_ROOT/disks/macOS-Sequoia.qcow2}
@@ -30,6 +32,18 @@ SSH_PORT=${SSH_PORT:-2224}
 VNC_BIND=${VNC_BIND:-127.0.0.1}
 NOVNC_BIND=${NOVNC_BIND:-127.0.0.1}
 
+OPENCORE_SOURCE_IMAGE=$UPSTREAM_DIR/OpenCore/OpenCore.qcow2
+OPENCORE_PRIVATE_IMAGE=$STATE_DIR/OpenCore-private.qcow2
+APPLE_SERVICES_DIR=$STATE_DIR/apple-services
+APPLE_SERVICES_MANIFEST=$APPLE_SERVICES_DIR/manifest.txt
+if [[ -z "${OPENCORE_IMAGE:-}" ]]; then
+  if [[ -f "$OPENCORE_PRIVATE_IMAGE" && ! -e "$APPLE_SERVICES_DIR/disabled" ]]; then
+    OPENCORE_IMAGE=$OPENCORE_PRIVATE_IMAGE
+  else
+    OPENCORE_IMAGE=$OPENCORE_SOURCE_IMAGE
+  fi
+fi
+
 # These values pin the audited upstream checkout. They may be overridden only
 # in the private config after a deliberate upstream review.
 EXPECTED_UPSTREAM_COMMIT=${EXPECTED_UPSTREAM_COMMIT:-4c378a4b5e0b219783683012bec680325eb40719}
@@ -37,11 +51,8 @@ EXPECTED_OPENCORE_SHA256=${EXPECTED_OPENCORE_SHA256:-6ed36c0c2a4206ccc695f6b1a73
 EXPECTED_OVMF_CODE_SHA256=${EXPECTED_OVMF_CODE_SHA256:-7decd7fa9965e7f943a1f79d1d05ce6d881540d625cc2a9641a57f89721b4577}
 EXPECTED_OVMF_VARS_SHA256=${EXPECTED_OVMF_VARS_SHA256:-6ed987af3a3c155be71665f510eae3e007eda9b8b94afd59d45e91c4a11565cc}
 
-STATE_DIR=$RUNTIME_ROOT/state
-LOG_DIR=$RUNTIME_ROOT/logs
 BASE_DMG=$RECOVERY_DIR/BaseSystem.dmg
 BASE_IMG=$RUNTIME_ROOT/installer/BaseSystem.img
-OPENCORE_IMAGE=$UPSTREAM_DIR/OpenCore/OpenCore.qcow2
 OVMF_CODE=$UPSTREAM_DIR/OVMF_CODE_4M.fd
 OVMF_VARS_SOURCE=$UPSTREAM_DIR/OVMF_VARS-1920x1080.fd
 OVMF_VARS_PRIVATE=$STATE_DIR/OVMF_VARS.fd
@@ -73,6 +84,7 @@ Usage: hackintosh-kvm.sh COMMAND
 Commands:
   fetch           Download an Apple-verified Sequoia recovery image
   prepare         Verify assets and create private sparse disk/state
+  apple-services  Build a stable private OpenCore identity (VM must be stopped)
   verify          Run read-only host and image checks
   install-service Link and reload the manual systemd user service
   run             Run QEMU and one private noVNC proxy in the foreground
@@ -157,9 +169,25 @@ verify_upstream() {
   commit=$(git -C "$UPSTREAM_DIR" rev-parse HEAD)
   [[ "$commit" == "$EXPECTED_UPSTREAM_COMMIT" ]] || \
     die "OSX-KVM checkout is not the audited commit ($commit)"
-  verify_hash "$OPENCORE_IMAGE" "$EXPECTED_OPENCORE_SHA256"
+  verify_hash "$OPENCORE_SOURCE_IMAGE" "$EXPECTED_OPENCORE_SHA256"
   verify_hash "$OVMF_CODE" "$EXPECTED_OVMF_CODE_SHA256"
   verify_hash "$OVMF_VARS_SOURCE" "$EXPECTED_OVMF_VARS_SHA256"
+}
+
+verify_selected_opencore() {
+  local expected
+  [[ -f "$OPENCORE_IMAGE" ]] || die "selected OpenCore image is missing: $OPENCORE_IMAGE"
+  if [[ "$OPENCORE_IMAGE" == "$OPENCORE_SOURCE_IMAGE" ]]; then
+    return 0
+  fi
+  [[ "$OPENCORE_IMAGE" == "$OPENCORE_PRIVATE_IMAGE" ]] || \
+    die "OPENCORE_IMAGE must be the audited source or managed private image"
+  [[ -s "$APPLE_SERVICES_MANIFEST" ]] || \
+    die "private OpenCore manifest is missing; run '$0 apple-services' while the VM is stopped"
+  expected=$(sed -n 's/^private_opencore_sha256=//p' "$APPLE_SERVICES_MANIFEST" | head -n 1)
+  [[ "$expected" =~ ^[0-9a-f]{64}$ ]] || die "private OpenCore manifest is invalid"
+  verify_hash "$OPENCORE_PRIVATE_IMAGE" "$expected"
+  qemu-img info "$OPENCORE_PRIVATE_IMAGE" >/dev/null || die "private OpenCore image is unreadable"
 }
 
 verify_recovery() {
@@ -286,7 +314,8 @@ write_private_manifest() {
   {
     printf 'generated_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf 'upstream_commit=%s\n' "$(git -C "$UPSTREAM_DIR" rev-parse HEAD)"
-    printf 'opencore_sha256=%s\n' "$(sha256_of "$OPENCORE_IMAGE")"
+    printf 'opencore_source_sha256=%s\n' "$(sha256_of "$OPENCORE_SOURCE_IMAGE")"
+    printf 'opencore_selected_sha256=%s\n' "$(sha256_of "$OPENCORE_IMAGE")"
     printf 'ovmf_code_sha256=%s\n' "$(sha256_of "$OVMF_CODE")"
     printf 'ovmf_vars_source_sha256=%s\n' "$(sha256_of "$OVMF_VARS_SOURCE")"
     printf 'base_system_dmg_sha256=%s\n' "$(sha256_of "$BASE_DMG")"
@@ -322,6 +351,7 @@ prepare() {
   ensure_layout
   validate_host
   verify_upstream
+  verify_selected_opencore
   prepare_recovery
   prepare_storage
   prepare_identity
@@ -517,6 +547,11 @@ status() {
   say "runtime: $RUNTIME_ROOT"
   say "disk: $DISK_IMAGE; capacity $DISK_SIZE; allocated $allocation"
   say "next-launch memory: ${RAM_GIB} GiB; vCPUs: $((CPU_CORES * CPU_THREADS))"
+  if [[ "$OPENCORE_IMAGE" == "$OPENCORE_PRIVATE_IMAGE" ]]; then
+    say "OpenCore identity: managed private image"
+  else
+    say "OpenCore identity: audited template image"
+  fi
   say "forwarded guest SSH: 127.0.0.1:$SSH_PORT"
   say "noVNC: $NOVNC_URL"
 }
@@ -525,6 +560,7 @@ command=${1:-}
 case "$command" in
   fetch) fetch_recovery ;;
   prepare) prepare ;;
+  apple-services) exec "$SCRIPT_DIR/hackintosh-kvm-apple-services.sh" prepare ;;
   verify) verify ;;
   install-service) install_service ;;
   run) run_vm ;;

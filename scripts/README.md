@@ -19,6 +19,7 @@ an operating system.
 | `boot-optiplex-3040-opencore.ps1` | Windows | Create, audit, arm, or clear the 3040's separate one-time OpenCore BCD path |
 | `bootstrap-optiplex-3040-macos.sh` | macOS | Enable key-only SSH and never-sleep behavior after Setup Assistant |
 | `hackintosh-kvm.sh` | Linux | Prepare and operate an isolated Sequoia/OpenCore KVM runtime |
+| `hackintosh-kvm-apple-services.sh` | Linux | Build, verify, disable, or re-enable one private KVM iServices identity |
 
 ## Z790 workstation KVM
 
@@ -39,6 +40,21 @@ but do not enable it at boot:
 See
 [`docs/24-z790-kvm-sequoia.md`](../docs/24-z790-kvm-sequoia.md)
 for the storage, memory, installation, console, and recovery boundary.
+
+After installation, prepare the Apple-services identity only with the VM
+stopped:
+
+```bash
+./scripts/hackintosh-kvm.sh apple-services
+./scripts/hackintosh-kvm-apple-services.sh verify
+```
+
+The helper generates identity values once and refuses to rotate a valid set.
+It keeps the config, EFI image, identity, manifest, and original-state backup
+outside Git. The source OpenCore image remains hash-pinned and unchanged.
+`rollback` selects that source image and restores the prior QEMU identity on
+the next launch; `enable` selects the validated private image again. Neither
+operation resets NVRAM or runs while QEMU owns the guest disk.
 
 The macOS scripts require an explicit EFI device. Example shape:
 
