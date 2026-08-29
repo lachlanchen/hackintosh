@@ -52,6 +52,24 @@ stopped:
 The helper generates identity values once and refuses to rotate a valid set.
 It keeps the config, EFI image, identity, manifest, and original-state backup
 outside Git. The source OpenCore image remains hash-pinned and unchanged.
+New identities include the two exact, length-preserving Sequoia DeviceCheck
+kernel patches documented in the KVM runbook. They are restricted to Darwin
+24 and validated with `Count = 1`.
+
+For an existing private identity created before this support was added, stop
+the VM and use the idempotent refresh path:
+
+```bash
+./scripts/hackintosh-kvm-apple-services.sh refresh
+./scripts/hackintosh-kvm-apple-services.sh verify
+```
+
+`refresh` preserves an owner-only pre-patch config, EFI, and manifest; rebuilds
+and round-trips the private EFI; checks the qcow2 and hashes; and does not
+rotate any identity value. The main launcher also persists a separate private
+QEMU `vmgenid` value so ordinary guest boots do not invent a new generation
+identity.
+
 `rollback` selects that source image and restores the prior QEMU identity on
 the next launch; `enable` selects the validated private image again. Neither
 operation resets NVRAM or runs while QEMU owns the guest disk.

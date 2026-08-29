@@ -58,6 +58,7 @@ OVMF_VARS_SOURCE=$UPSTREAM_DIR/OVMF_VARS-1920x1080.fd
 OVMF_VARS_PRIVATE=$STATE_DIR/OVMF_VARS.fd
 MAC_FILE=$STATE_DIR/network-mac
 UUID_FILE=$STATE_DIR/machine-uuid
+VMGENID_FILE=$STATE_DIR/vm-generation-id
 QEMU_PID_FILE=$STATE_DIR/qemu.pid
 NOVNC_PID_FILE=$STATE_DIR/novnc.pid
 QMP_SOCKET=$STATE_DIR/qmp.sock
@@ -272,7 +273,15 @@ prepare_identity() {
     require_command uuidgen
     uuidgen >"$UUID_FILE"
   fi
-  chmod 600 "$MAC_FILE" "$UUID_FILE"
+  if [[ ! -s "$VMGENID_FILE" ]]; then
+    require_command uuidgen
+    uuidgen >"$VMGENID_FILE"
+  fi
+  [[ "$(<"$UUID_FILE")" =~ ^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$ ]] || \
+    die "private machine UUID is invalid"
+  [[ "$(<"$VMGENID_FILE")" =~ ^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$ ]] || \
+    die "private VM generation ID is invalid"
+  chmod 600 "$MAC_FILE" "$UUID_FILE" "$VMGENID_FILE"
 }
 
 prepare_recovery() {
@@ -382,7 +391,7 @@ verify() {
 }
 
 run_vm() {
-  local osk mac machine_uuid log_file qemu_child novnc_child rc
+  local osk mac machine_uuid vm_generation_id log_file qemu_child novnc_child rc
   local -a qemu_args
 
   validate_config
@@ -399,6 +408,7 @@ run_vm() {
   osk=$(extract_osk)
   mac=$(<"$MAC_FILE")
   machine_uuid=$(<"$UUID_FILE")
+  vm_generation_id=$(<"$VMGENID_FILE")
   log_file=$LOG_DIR/qemu-$(date -u +%Y%m%dT%H%M%SZ).log
   ln -sfn "$(basename -- "$log_file")" "$LOG_DIR/latest.log"
   rm -f -- "$QMP_SOCKET"
@@ -412,6 +422,7 @@ run_vm() {
     -cpu "Skylake-Client,-hle,-rtm,kvm=on,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,+ssse3,+sse4.2,+popcnt,+avx,+aes,+xsave,+xsaveopt,check"
     -smp "$((CPU_CORES * CPU_THREADS))",cores="$CPU_CORES",threads="$CPU_THREADS",sockets=1
     -uuid "$machine_uuid"
+    -device "vmgenid,guid=$vm_generation_id"
     -device qemu-xhci,id=xhci
     -device usb-kbd,bus=xhci.0
     -device usb-tablet,bus=xhci.0

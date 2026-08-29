@@ -100,9 +100,9 @@ Hackintosh-KVM/
 ```
 
 The private `state/` directory contains writable OVMF NVRAM, a generated VM
-UUID and MAC address, QMP socket, PIDs, and an asset manifest. None belongs in
-Git. The OpenCore image is attached with QEMU snapshot mode so the audited
-source image remains unchanged.
+UUID and MAC address, a separately generated stable VM generation ID, QMP
+socket, PIDs, and an asset manifest. None belongs in Git. The OpenCore image is
+attached with QEMU snapshot mode so the audited source image remains unchanged.
 
 ## Apple Account identity repair
 
@@ -149,7 +149,7 @@ validated private identity with `enable`, again only while stopped. No NVRAM
 reset was performed during the verified repair.
 
 The first retry with the repaired identity still failed. Unified AuthKit logs
-then narrowed the remaining fault precisely:
+then narrowed the next fault precisely:
 
 - `en0` was the default route and reported `IOBuiltin = Yes`;
 - Apple's OpenID endpoint returned HTTP 200 and the guest clock was correct;
@@ -164,16 +164,65 @@ an incorrectly entered account name, or rejected attestation can produce the
 same user-facing dialog. The small `~/Library/Caches/com.apple.akd` directory
 was therefore archived privately, removed, and allowed to regenerate during a
 clean guest reboot. No account database, keychain, or OpenCore NVRAM was
-deleted. The post-reboot sign-in page was reopened blank so the operator could
-re-enter the exact Apple Account and complete 2FA interactively.
+deleted. That cache refresh alone did not clear the DeviceCheck failure.
 
-A locally correct identity cannot override an Apple-side account restriction;
-Dortania notes that some new or previously flagged accounts can still require
-Apple Support. Never rotate identities repeatedly or automate credential
-attempts. If the clean retry still fails with the same Anisette evidence, stop
-and make an explicit operator decision before the next reversible escalation:
-back up writable firmware, reset OpenCore NVRAM once, and retest the same
-identity. NVRAM was **not** reset in this run.
+### Sequoia DeviceCheck compatibility patch
+
+The next change was boot-critical and was made only after preserving the
+working private OpenCore image and config. The two exact, length-preserving
+kernel cstring swaps were audited from
+[`osx-proxmox-next` v0.31.2 at commit `0f5a16a`](https://github.com/lucid-fabrics/osx-proxmox-next/tree/0f5a16ad1e294f6d4c0c67e976be323fd3a13eb5).
+Before applying them, each source byte sequence was verified to occur exactly
+once in the installed Sequoia kernel. OpenCore constrains both patches to
+Darwin 24 (`24.0.0` through `24.99.99`) with `Count = 1`; they are not enabled
+for Sonoma, Tahoe, or an unknown future kernel.
+
+The pair swaps the names exposed by the real `hv_vmm_present` and
+`hibernatecount` kernel objects. After the clean reboot, the verified guest
+reported `kern.hv_vmm_present = 0` and `kern.hibernatecount = 1`. This removed
+the earlier BAA provisioning failure from the observed authentication path.
+It remains an unsupported compatibility patch, not Apple support for a KVM
+guest.
+
+Existing private identities can be upgraded only while the guest is stopped:
+
+```bash
+./scripts/hackintosh-kvm-apple-services.sh refresh
+./scripts/hackintosh-kvm-apple-services.sh verify
+```
+
+`refresh` refuses a running VM, validates the current private identity first,
+keeps one owner-only pre-patch config/EFI/manifest backup, rebuilds and
+round-trips the EFI, runs the matching `ocvalidate`, checks both config and
+image hashes, and does not rotate serial, MLB, ROM, MAC, or SystemUUID. New
+identities receive the same scoped patches during `prepare`.
+
+The launcher also now creates one stable private `vm-generation-id` and passes
+it through QEMU's `vmgenid` device on every boot. It is generated once, format
+validated, stored mode `0600`, and is independent of the OpenCore identity.
+
+### Verified post-patch authentication boundary
+
+A single post-patch retry used a visibly verified account field and exactly 12
+masked password characters. The result was different from the pre-patch
+DeviceCheck failure:
+
+- DNS, IPv4/IPv6 path selection, TCP, and TLS 1.3 succeeded on `en0`;
+- `akd` sent the request and received HTTP 200;
+- the earlier Anisette `-8008`, BAA `-10000`, provisioning-finish HTTP 401,
+  and server `-22410` evidence did not recur in this attempt;
+- SRP authentication then failed with `AKAuthenticationServerError -20101`,
+  and the UI reported that the Apple Account or password was incorrect;
+- no 2FA prompt was reached and the rejected password was cleared from the
+  visible form afterward.
+
+This verifies that the local DeviceCheck path changed successfully, but Apple
+Account sign-in is **not yet complete**. The remaining observed failure is at
+the supplied credential/account layer, not a broad guest network outage. Do
+not rotate the private identity, reset NVRAM, or automate retries for this
+result. Confirm the exact account and password through an Apple-supported path
+before one further attempt. A locally coherent identity cannot override an
+incorrect credential or an Apple-side account restriction.
 
 ## Guest login, power, wallpaper, and private access
 

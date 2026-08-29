@@ -1,6 +1,6 @@
 # Current State
 
-Status date: 2026-08-01
+Status date: 2026-08-29
 
 ## Verified
 
@@ -117,6 +117,25 @@ development host.
   hardware.
 - Optionally add a Broadcom BCM94360CD PCIe card for AirDrop, accepting that
   Sequoia requires a separately maintained legacy wireless patch.
+
+## Separate Z790 KVM profile
+
+These facts describe the isolated Ubuntu-hosted VM documented in
+[`24-z790-kvm-sequoia.md`](24-z790-kvm-sequoia.md), not the physical OptiPlex
+state above:
+
+- Sequoia 15.7.9 (`24G830`) boots from the sparse private qcow2 through the
+  pinned OSX-KVM/OpenCore profile.
+- The private OpenCore identity and built-in `en0` mapping remain stable. A
+  stable private QEMU `vmgenid` is now reused across normal boots.
+- Two exact kernel cstring swaps are scoped to Darwin 24 and passed the
+  matching `ocvalidate`, EFI round-trip, qcow2, and post-boot checks.
+- Post-boot `kern.hv_vmm_present = 0` is verified. Apple authentication now
+  reaches TLS and HTTP 200 without the prior BAA/HTTP 401 failure, but the
+  supplied account/password pair was rejected before 2FA. Sign-in therefore
+  remains incomplete.
+- No NVRAM reset, identity rotation, host boot change, GPU passthrough, or
+  non-loopback service exposure was performed.
 
 ## OptiPlex 3040 Candidate
 
