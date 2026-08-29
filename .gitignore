@@ -20,6 +20,10 @@ config.plist
 # Installers, packages, archives, and generated evidence.
 *.app/
 *.dmg
+*.img
+*.raw
+*.qcow2
+*.chunklist
 *.pkg
 *.xip
 *.zip
@@ -27,6 +31,8 @@ config.plist
 artifacts/
 private/
 evidence/
+runtime/
+vm/
 tmp/
 __pycache__/
 *.pyc

@@ -1,10 +1,17 @@
 # Primary Sources
 
-Checked 2026-07-26.
+Checked 2026-08-29.
 
 - [OpenCore Desktop Skylake guide](https://dortania.github.io/OpenCore-Install-Guide/config.plist/skylake.html)
 - [OpenCore Laptop Kaby Lake guide](https://dortania.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html)
 - [OpenCore releases](https://github.com/acidanthera/OpenCorePkg/releases)
+- [OSX-KVM repository and current host requirements](https://github.com/kholia/OSX-KVM)
+- [OSX-KVM Apple recovery fetcher](https://github.com/kholia/OSX-KVM/blob/master/fetch-macOS-v2.py)
+- [QEMU disk-image documentation](https://www.qemu.org/docs/master/system/images.html)
+- [QEMU memory-backend options](https://www.qemu.org/docs/master/system/invocation.html)
+- [Dortania NVIDIA GPU support](https://dortania.github.io/GPU-Buyers-Guide/modern-gpus/nvidia-gpu.html)
+- [Dortania Intel GPU support](https://dortania.github.io/GPU-Buyers-Guide/modern-gpus/intel-gpu.html)
+- [Apple macOS Sequoia software license](https://www.apple.com/legal/sla/docs/macOSSequoia.pdf)
 - [OpenCore-Mod release matching the Surface live binary](https://github.com/wjz304/OpenCore_Patch_Build/releases/tag/1.0.6_79ea932f)
 - [BigSurface repository and Surface device support](https://github.com/Xiashangning/BigSurface)
 - [Apple: identify MacBook Pro models (`MacBookPro16,3`)](https://support.apple.com/108052)

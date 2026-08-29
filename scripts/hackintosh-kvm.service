@@ -1,0 +1,15 @@
+[Unit]
+Description=Private OpenCore macOS KVM virtual machine
+Documentation=https://github.com/lachlanchen/hackintosh/blob/main/docs/24-z790-kvm-sequoia.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/ProjectsLFS/hackintosh/scripts/hackintosh-kvm.sh run
+Restart=no
+TimeoutStopSec=120
+KillMode=mixed
+
+[Install]
+WantedBy=default.target

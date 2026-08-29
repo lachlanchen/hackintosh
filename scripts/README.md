@@ -18,6 +18,27 @@ an operating system.
 | `stage-optiplex-3040-recovery.ps1` | Windows | Audit or stage the exact 3040 internal recovery partition and payload |
 | `boot-optiplex-3040-opencore.ps1` | Windows | Create, audit, arm, or clear the 3040's separate one-time OpenCore BCD path |
 | `bootstrap-optiplex-3040-macos.sh` | macOS | Enable key-only SSH and never-sleep behavior after Setup Assistant |
+| `hackintosh-kvm.sh` | Linux | Prepare and operate an isolated Sequoia/OpenCore KVM runtime |
+
+## Z790 workstation KVM
+
+`hackintosh-kvm.sh` keeps Apple media, writable firmware state, VM identity,
+logs, and the sparse qcow2 disk outside Git. It refuses non-loopback console
+bindings, verifies the pinned OSX-KVM/OpenCore/OVMF inputs, and never attaches
+a physical disk or GPU.
+
+The companion `hackintosh-kvm.service` is a manual systemd user unit. Link it,
+but do not enable it at boot:
+
+```bash
+./scripts/hackintosh-kvm.sh install-service
+./scripts/hackintosh-kvm.sh verify
+./scripts/hackintosh-kvm.sh start
+```
+
+See
+[`docs/24-z790-kvm-sequoia.md`](../docs/24-z790-kvm-sequoia.md)
+for the storage, memory, installation, console, and recovery boundary.
 
 The macOS scripts require an explicit EFI device. Example shape:
 

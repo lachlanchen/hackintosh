@@ -57,6 +57,7 @@ to use its native Apple Kaby Lake graphics driver.
 | [OptiPlex 7050 UU Remote reliability](docs/19-optiplex-7050-uuremote-reliability.md) | Freeze evidence, storage guards, and unattended remote recovery |
 | [OptiPlex 3040 Monterey freeze handoff](docs/20-optiplex-3040-monterey-freeze-handoff.md) | Framebuffer evidence, failed handoff recovery, reversible picker cleanup, and CLI fallback |
 | [OptiPlex 7050 Sequoia-only storage](docs/22-optiplex-7050-sequoia-only-storage.md) | Guarded Monterey retirement, picker cleanup, and post-reboot acceptance |
+| [Z790 workstation macOS KVM](docs/24-z790-kvm-sequoia.md) | Isolated Sequoia VM with sparse SATA storage and private noVNC |
 | [Sources](docs/sources.md) | Primary documentation used |
 
 ## Repository Boundary
