@@ -27,6 +27,22 @@ The profile deliberately does not:
 - expose VNC, noVNC, or guest SSH beyond host loopback;
 - start automatically at boot.
 
+## Verified installation result
+
+On 2026-08-29 the Apple-verified Sequoia 15.4.1 recovery completed both
+installation stages and booted the installed virtual disk into Setup
+Assistant. The run stopped at **Select Your Country or Region**: installation
+is complete, while region, keyboard, Apple ID, migration, and local-account
+choices remain intentionally user-owned.
+
+The first stage downloaded and prepared the system in Recovery, then OpenCore
+automatically selected the installer volume after reboot. The second stage
+completed without a manual boot-picker intervention and reached Setup
+Assistant. The private qcow2 had a 512 GiB virtual capacity and 32.8 GiB of
+physical allocation at that checkpoint. The QEMU/noVNC service remained
+active, all three forwarded listeners remained bound to `127.0.0.1`, and the
+host retained roughly 77 GiB of available memory.
+
 ## Verified host audit
 
 | Area | Observed state | Decision |
@@ -162,6 +178,10 @@ In macOS Recovery:
 5. install macOS to that virtual disk;
 6. allow installer reboots and choose the macOS installer/disk in OpenCore
    until Setup Assistant appears.
+
+In the verified run, OpenCore selected the correct installer target
+automatically. Keep the console visible during future installs because that
+default is useful evidence, not a guarantee for every NVRAM state.
 
 Never select a host block device: none should be present in this profile.
 
