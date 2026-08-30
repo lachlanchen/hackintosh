@@ -1,0 +1,129 @@
+--- a/core/rfb.js
++++ b/core/rfb.js
+@@ -46,0 +47,46 @@
++// The Hackintosh KVM can be reached through source keyboards with different
++// layouts. QEMU's extended key event normally sends the physical key position,
++// which makes punctuation wrong when the source layout and macOS layout differ.
++// Translate printable ASCII punctuation to an explicit US virtual-key chord;
++// letters, shortcuts, navigation keys, and input-method events stay untouched.
++const layoutSafeUSChords = new Map([
++    [0x21, ["Digit1", true]],     // !
++    [0x22, ["Quote", true]],      // "
++    [0x23, ["Digit3", true]],     // #
++    [0x24, ["Digit4", true]],     // $
++    [0x25, ["Digit5", true]],     // %
++    [0x26, ["Digit7", true]],     // &
++    [0x27, ["Quote", false]],     // '
++    [0x28, ["Digit9", true]],     // (
++    [0x29, ["Digit0", true]],     // )
++    [0x2a, ["Digit8", true]],     // *
++    [0x2b, ["Equal", true]],      // +
++    [0x2c, ["Comma", false]],     // ,
++    [0x2d, ["Minus", false]],     // -
++    [0x2e, ["Period", false]],    // .
++    [0x2f, ["Slash", false]],     // /
++    [0x3a, ["Semicolon", true]],  // :
++    [0x3b, ["Semicolon", false]], // ;
++    [0x3c, ["Comma", true]],      // <
++    [0x3d, ["Equal", false]],     // =
++    [0x3e, ["Period", true]],     // >
++    [0x3f, ["Slash", true]],      // ?
++    [0x40, ["Digit2", true]],     // @
++    [0x5b, ["BracketLeft", false]],  // [
++    [0x5c, ["Backslash", false]],    // \
++    [0x5d, ["BracketRight", false]], // ]
++    [0x5e, ["Digit6", true]],        // ^
++    [0x5f, ["Minus", true]],         // _
++    [0x60, ["Backquote", false]],    // `
++    [0x7b, ["BracketLeft", true]],   // {
++    [0x7c, ["Backslash", true]],     // |
++    [0x7d, ["BracketRight", true]],  // }
++    [0x7e, ["Backquote", true]],     // ~
++]);
++
++const layoutSafeShiftCodes = new Set(["ShiftLeft", "ShiftRight"]);
++const layoutSafeShortcutModifierCodes = new Set([
++    "ControlLeft", "ControlRight", "AltLeft", "AltRight",
++    "MetaLeft", "MetaRight",
++]);
++
+@@ -126,0 +173,12 @@
++        // This patched web root belongs only to the macOS KVM. The query
++        // parameter provides an immediate rollback without touching the VM:
++        // append layoutsafe=0 to restore upstream noVNC behavior.
++        let layoutSafeSetting = null;
++        if (typeof window !== 'undefined') {
++            layoutSafeSetting = new URLSearchParams(window.location.search).get('layoutsafe');
++        }
++        this._layoutSafeKeyboard = layoutSafeSetting !== '0';
++        this._layoutSafeSourceShifts = new Set();
++        this._layoutSafeShortcutModifiers = new Set();
++        this._layoutSafeConsumedCodes = new Set();
++
+@@ -405,0 +464,35 @@
++    _sendLayoutSafeExtendedKey(keysym, code, down) {
++        const scancode = XtScancode[code];
++        if (!scancode) {
++            return false;
++        }
++        RFB.messages.QEMUExtendedKeyEvent(this._sock, keysym, down, scancode);
++        return true;
++    }
++
++    _sendLayoutSafePunctuation(keysym, targetCode, targetShift) {
++        const sourceShifts = Array.from(this._layoutSafeSourceShifts);
++
++        // A JIS source may need Shift to produce an unshifted US character
++        // (for example Shift+7 -> apostrophe). Temporarily normalize the guest
++        // modifier state, emit the intended US chord, then restore held keys.
++        for (const sourceCode of sourceShifts) {
++            const sourceKeysym = sourceCode === "ShiftRight" ?
++                KeyTable.XK_Shift_R : KeyTable.XK_Shift_L;
++            this._sendLayoutSafeExtendedKey(sourceKeysym, sourceCode, false);
++        }
++        if (targetShift) {
++            this._sendLayoutSafeExtendedKey(KeyTable.XK_Shift_L, "ShiftLeft", true);
++        }
++        this._sendLayoutSafeExtendedKey(keysym, targetCode, true);
++        this._sendLayoutSafeExtendedKey(keysym, targetCode, false);
++        if (targetShift) {
++            this._sendLayoutSafeExtendedKey(KeyTable.XK_Shift_L, "ShiftLeft", false);
++        }
++        for (const sourceCode of sourceShifts) {
++            const sourceKeysym = sourceCode === "ShiftRight" ?
++                KeyTable.XK_Shift_R : KeyTable.XK_Shift_L;
++            this._sendLayoutSafeExtendedKey(sourceKeysym, sourceCode, true);
++        }
++    }
++
+@@ -414,0 +508,30 @@
++        }
++
++        if (this._layoutSafeKeyboard) {
++            if (layoutSafeShiftCodes.has(code)) {
++                if (down) {
++                    this._layoutSafeSourceShifts.add(code);
++                } else {
++                    this._layoutSafeSourceShifts.delete(code);
++                }
++            }
++            if (layoutSafeShortcutModifierCodes.has(code)) {
++                if (down) {
++                    this._layoutSafeShortcutModifiers.add(code);
++                } else {
++                    this._layoutSafeShortcutModifiers.delete(code);
++                }
++            }
++
++            if (!down && code && this._layoutSafeConsumedCodes.has(code)) {
++                this._layoutSafeConsumedCodes.delete(code);
++                return;
++            }
++
++            const chord = layoutSafeUSChords.get(keysym);
++            if (down && code && chord && this._qemuExtKeyEventSupported &&
++                this._layoutSafeShortcutModifiers.size === 0) {
++                this._layoutSafeConsumedCodes.add(code);
++                this._sendLayoutSafePunctuation(keysym, chord[0], chord[1]);
++                return;
++            }

@@ -31,6 +31,7 @@ NOVNC_PORT=${NOVNC_PORT:-6141}
 SSH_PORT=${SSH_PORT:-2224}
 VNC_BIND=${VNC_BIND:-127.0.0.1}
 NOVNC_BIND=${NOVNC_BIND:-127.0.0.1}
+NOVNC_SYSTEM_ROOT=${NOVNC_SYSTEM_ROOT:-/usr/share/novnc}
 
 OPENCORE_SOURCE_IMAGE=$UPSTREAM_DIR/OpenCore/OpenCore.qcow2
 OPENCORE_PRIVATE_IMAGE=$STATE_DIR/OpenCore-private.qcow2
@@ -63,7 +64,10 @@ QEMU_PID_FILE=$STATE_DIR/qemu.pid
 NOVNC_PID_FILE=$STATE_DIR/novnc.pid
 QMP_SOCKET=$STATE_DIR/qmp.sock
 VNC_PORT=$((5900 + VNC_DISPLAY))
-NOVNC_URL="http://$NOVNC_BIND:$NOVNC_PORT/vnc.html?autoconnect=1&resize=scale&quality=6&compression=2"
+NOVNC_WEB_ROOT=$STATE_DIR/novnc-layout-safe
+NOVNC_LAYOUT_PATCH=$REPO_DIR/patches/novnc-1.3.0-layout-safe-keyboard.patch
+EXPECTED_NOVNC_RFB_SHA256=${EXPECTED_NOVNC_RFB_SHA256:-331109966c80bef620bcd09242d43dbc05fa83cb44eba439ad20148f86aa479e}
+NOVNC_URL="http://$NOVNC_BIND:$NOVNC_PORT/vnc.html?autoconnect=1&resize=scale&quality=6&compression=2&layoutsafe=1"
 
 say() {
   printf '[hackintosh-kvm] %s\n' "$*"
@@ -86,6 +90,7 @@ Commands:
   fetch           Download an Apple-verified Sequoia recovery image
   prepare         Verify assets and create private sparse disk/state
   apple-services  Build a stable private OpenCore identity (VM must be stopped)
+  prepare-novnc  Build the private layout-safe noVNC web root
   verify          Run read-only host and image checks
   install-service Link and reload the manual systemd user service
   run             Run QEMU and one private noVNC proxy in the foreground
@@ -136,6 +141,86 @@ verify_hash() {
 ensure_layout() {
   mkdir -p "$RUNTIME_ROOT" "$RECOVERY_DIR" "$(dirname -- "$DISK_IMAGE")" "$STATE_DIR" "$LOG_DIR"
   chmod 700 "$RUNTIME_ROOT" "$RECOVERY_DIR" "$(dirname -- "$DISK_IMAGE")" "$STATE_DIR" "$LOG_DIR"
+}
+
+prepare_novnc_web_root() {
+  local source_rfb source_hash patch_hash expected_stamp current_stamp
+  local staging previous
+
+  source_rfb=$NOVNC_SYSTEM_ROOT/core/rfb.js
+  [[ -f "$source_rfb" ]] || die "system noVNC source is missing: $source_rfb"
+  [[ -f "$NOVNC_LAYOUT_PATCH" ]] || die "layout-safe noVNC patch is missing: $NOVNC_LAYOUT_PATCH"
+
+  source_hash=$(sha256_of "$source_rfb")
+  patch_hash=$(sha256_of "$NOVNC_LAYOUT_PATCH")
+  expected_stamp="$source_hash $patch_hash"
+  current_stamp=
+  if [[ -r "$NOVNC_WEB_ROOT/.layout-safe-stamp" ]]; then
+    current_stamp=$(<"$NOVNC_WEB_ROOT/.layout-safe-stamp")
+  fi
+  cleanup_stale_novnc_web_roots
+  if [[ "$current_stamp" == "$expected_stamp" && -f "$NOVNC_WEB_ROOT/core/rfb.js" ]]; then
+    return
+  fi
+  if [[ "$source_hash" != "$EXPECTED_NOVNC_RFB_SHA256" ]]; then
+    if [[ -f "$NOVNC_WEB_ROOT/core/rfb.js" ]]; then
+      warn "installed noVNC changed; retaining the last verified private web root until its patch is reviewed"
+    else
+      warn "installed noVNC changed and no verified private web root exists; using upstream noVNC for remote-access continuity"
+      NOVNC_WEB_ROOT=$NOVNC_SYSTEM_ROOT
+    fi
+    return
+  fi
+
+  ensure_layout
+  require_command patch
+  staging=$(mktemp -d "$STATE_DIR/novnc-layout-safe.new.XXXXXX")
+  if ! (
+    cp -a "$NOVNC_SYSTEM_ROOT/." "$staging/"
+    patch --batch --forward -d "$staging" -p1 <"$NOVNC_LAYOUT_PATCH"
+    if command -v node >/dev/null 2>&1; then
+      node --check "$staging/core/rfb.js"
+    fi
+    printf '%s\n' "$expected_stamp" >"$staging/.layout-safe-stamp"
+  ); then
+    rm -rf -- "$staging"
+    die "failed to construct the private layout-safe noVNC web root"
+  fi
+
+  previous=$STATE_DIR/novnc-layout-safe.previous.$$.${RANDOM}
+  if [[ -e "$NOVNC_WEB_ROOT" ]]; then
+    mv -- "$NOVNC_WEB_ROOT" "$previous"
+  fi
+  if ! mv -- "$staging" "$NOVNC_WEB_ROOT"; then
+    [[ ! -e "$previous" ]] || mv -- "$previous" "$NOVNC_WEB_ROOT"
+    die "failed to promote the verified layout-safe noVNC web root"
+  fi
+  if directory_is_process_cwd "$previous"; then
+    warn "an active noVNC proxy is retaining the previous web root; restart only that proxy to serve the update"
+  else
+    rm -rf -- "$previous"
+  fi
+  say "prepared private layout-safe noVNC web root: $NOVNC_WEB_ROOT"
+}
+
+directory_is_process_cwd() {
+  local directory=$1 process_cwd target
+
+  [[ -d "$directory" ]] || return 1
+  target=$(readlink -f -- "$directory") || return 1
+  for process_cwd in /proc/[0-9]*/cwd; do
+    [[ "$(readlink -- "$process_cwd" 2>/dev/null || true)" == "$target" ]] && return 0
+  done
+  return 1
+}
+
+cleanup_stale_novnc_web_roots() {
+  local previous
+
+  for previous in "$STATE_DIR"/novnc-layout-safe.previous.*; do
+    [[ -d "$previous" ]] || continue
+    directory_is_process_cwd "$previous" || rm -rf -- "$previous"
+  done
 }
 
 validate_config() {
@@ -404,6 +489,7 @@ run_vm() {
   prepare
   ensure_ports_free
   require_command websockify
+  prepare_novnc_web_root
 
   osk=$(extract_osk)
   mac=$(<"$MAC_FILE")
@@ -470,7 +556,7 @@ run_vm() {
   trap forward_signal INT TERM
   trap cleanup EXIT
 
-  websockify --web=/usr/share/novnc "$NOVNC_BIND:$NOVNC_PORT" "$VNC_BIND:$VNC_PORT" \
+  websockify --web="$NOVNC_WEB_ROOT" "$NOVNC_BIND:$NOVNC_PORT" "$VNC_BIND:$VNC_PORT" \
     >>"$LOG_DIR/novnc.log" 2>&1 &
   novnc_child=$!
   printf '%s\n' "$novnc_child" >"$NOVNC_PID_FILE"
@@ -565,6 +651,7 @@ status() {
   fi
   say "forwarded guest SSH: 127.0.0.1:$SSH_PORT"
   say "noVNC: $NOVNC_URL"
+  say "noVNC keyboard: layout-safe punctuation (append layoutsafe=0 to disable)"
 }
 
 command=${1:-}
@@ -572,6 +659,7 @@ case "$command" in
   fetch) fetch_recovery ;;
   prepare) prepare ;;
   apple-services) exec "$SCRIPT_DIR/hackintosh-kvm-apple-services.sh" prepare ;;
+  prepare-novnc) prepare_novnc_web_root ;;
   verify) verify ;;
   install-service) install_service ;;
   run) run_vm ;;

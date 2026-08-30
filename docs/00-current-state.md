@@ -1,6 +1,6 @@
 # Current State
 
-Status date: 2026-08-29
+Status date: 2026-08-30
 
 ## Verified
 
@@ -130,10 +130,27 @@ state above:
   stable private QEMU `vmgenid` is now reused across normal boots.
 - Two exact kernel cstring swaps are scoped to Darwin 24 and passed the
   matching `ocvalidate`, EFI round-trip, qcow2, and post-boot checks.
-- Post-boot `kern.hv_vmm_present = 0` is verified. Apple authentication now
-  reaches TLS and HTTP 200 without the prior BAA/HTTP 401 failure, but the
-  supplied account/password pair was rejected before 2FA. Sign-in therefore
-  remains incomplete.
+- Post-boot `kern.hv_vmm_present = 0` is verified. The operator subsequently
+  completed Apple Account login manually; an authenticated App Store download
+  verified the Media & Purchases path without rotating identity or NVRAM.
+- Xcode 26.3 (`17C529`) is installed at `/Applications/Xcode.app`, selected,
+  licensed, and through first-launch setup. The signed App Store package and
+  application passed independent verification before the temporary 5.5 GiB
+  capture/expansion files were removed.
+- Bundled macOS 26.2, iOS 26.2, and watchOS 26.2 SDKs are present. Only
+  universal iOS 26.3.1 (`23D8133`) and watchOS 26.2 (`23S303`) simulator
+  runtimes were installed and registered; tvOS, visionOS, and
+  `-downloadAllPlatforms` were excluded. Swift 6.2.4 and Apple Clang 17 were
+  verified, including a successful Swift execution test. About 448 GiB remains
+  free in the guest.
+- iCloud Drive is enabled with optimized storage, but currently consumes no
+  local file data. Cloud-backed files must be made online-only with Finder's
+  **Remove Download**, never filesystem deletion.
+- The nested JIS/US punctuation mismatch was isolated to QEMU's extended VNC
+  physical-key path. A hash-pinned, private noVNC overlay now converts only
+  printable ASCII punctuation to explicit U.S. guest chords. The live proxy
+  was migrated without rebooting the VM; `layoutsafe=0` is the immediate
+  rollback, and no Ubuntu or macOS global keyboard layout was changed.
 - No NVRAM reset, identity rotation, host boot change, GPU passthrough, or
   non-loopback service exposure was performed.
 
