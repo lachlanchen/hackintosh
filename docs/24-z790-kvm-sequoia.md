@@ -1,6 +1,6 @@
 # Z790 Workstation macOS KVM Profile
 
-Status date: 2026-08-30
+Profile baseline: 2026-08-30. Latest disk-recovery checkpoint: 2026-09-09.
 
 This is a separate virtual-machine profile for the Ubuntu workstation. It does
 not replace or modify the physical OptiPlex and Surface Hackintosh records in
@@ -547,6 +547,46 @@ Only then consider `kvm.ignore_msrs=1`; do not change host KVM policy merely
 because an upstream sample suggests it.
 
 ## Reproducibility checklist
+
+### Offline qcow2 reference-count recovery
+
+On 2026-09-09 the owner approved an in-place repair of this profile's existing
+guest image after a host reboot. The stopped image had lazy refcounts enabled,
+its dirty flag set, and 24,182 reported reference-count inconsistencies. This
+is consistent with interrupted refcount updates, but does not establish the
+integrity of every guest file. QEMU documents that lazy refcounts can require
+a rebuild after a host crash. [QEMU disk-image documentation](https://www.qemu.org/docs/master/system/images.html)
+
+The recovery sequence is deliberately separate from ordinary startup:
+
+1. Confirm the exact guest is stopped and no process has its image open. Keep
+   QEMU's exclusive image locking; never use `-U` to repair a running guest.
+2. Run `qemu-img check --output=json IMAGE` and retain the small diagnostic.
+3. Obtain the owner's repair decision. A current backup is preferable; an
+   explicitly approved in-place repair can reuse the original image without
+   creating another large copy. Preserve any existing backup.
+4. Run `qemu-img check -r all --output=json IMAGE` only against that validated
+   image. `-r leaks` is insufficient for missing reference counts. Repair may
+   hide pre-existing damage or choose an incorrect fix, so this is not an
+   unconditional automatic boot action. [QEMU repair command](https://www.qemu.org/docs/master/tools/qemu-img.html)
+5. Require a fresh read-only check to exit zero with no remaining errors, then
+   start the existing service and verify the guest desktop and SSH separately.
+
+The verified repair reported 12,091 corruptions fixed and exit status zero.
+The independent post-repair check found no remaining errors, and the dirty
+flag was clear before startup. No new guest image, identity, or firmware change
+was needed. This proves qcow2 metadata consistency, not an APFS filesystem scan.
+
+The existing guest subsequently reached its normal logged-in Finder desktop;
+SSH verified Sequoia 15.7.9 and Xcode 26.6. The release source checkout was clean,
+and the retained signed application archive's exported IPA matched its prior
+SHA-256. The boot picker initially highlighted EFI; explicit arrow-key selection
+of **Macintosh HD**, visually checked before Enter, booted the installed system.
+Do not assume a VNC mouse click changed a preboot selection. No NVRAM reset was
+needed. Before rebooting the host, shut down macOS and verify the VM process has
+exited; an ACPI power-button request may still need a guest confirmation.
+
+### Existing profile checks
 
 - `bash -n scripts/hackintosh-kvm.sh`
 - `bash -n scripts/hackintosh-kvm-apple-services.sh`

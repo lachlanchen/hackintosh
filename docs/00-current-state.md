@@ -1,6 +1,7 @@
 # Current State
 
-Status date: 2026-08-30
+Status date: 2026-09-09 (KVM recovery update; physical-host facts retain their
+previous verification dates)
 
 ## Verified
 
@@ -124,6 +125,14 @@ These facts describe the isolated Ubuntu-hosted VM documented in
 [`24-z790-kvm-sequoia.md`](24-z790-kvm-sequoia.md), not the physical OptiPlex
 state above:
 
+- On 2026-09-09 the owner approved in-place qcow2 refcount repair after a host
+  reboot. QEMU reported 12,091 inconsistencies fixed; a separate offline check
+  then passed with no remaining errors and a cleared dirty flag. No additional
+  guest image was created. The recovery procedure is recorded in the profile's
+  [offline recovery section](24-z790-kvm-sequoia.md#offline-qcow2-reference-count-recovery).
+  The logged-in Finder desktop and SSH subsequently returned; Xcode 26.6 ran,
+  the release checkout was clean, and its retained signed IPA matched its prior
+  SHA-256. This is not a complete APFS or all-file integrity audit.
 - Sequoia 15.7.9 (`24G830`) boots from the sparse private qcow2 through the
   pinned OSX-KVM/OpenCore profile.
 - The private OpenCore identity and built-in `en0` mapping remain stable. A
